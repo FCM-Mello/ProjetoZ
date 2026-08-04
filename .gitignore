@@ -1,0 +1,17 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Pastas de Build
+[Dd]ebug/
+[Rr]elease/
+x64/
+bin/
+obj/
+
+# Node / Frontend (se aplicável)
+node_modules/
+dist/

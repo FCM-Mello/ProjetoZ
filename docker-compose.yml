@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: projetoz-postgres
+    restart: always
+
+    environment:
+      POSTGRES_DB: projetoz
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: ProjetoZ.Api/Dockerfile
+
+    container_name: projetoz-api
+
+    depends_on:
+      - postgres
+
+    environment:
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=projetoz;Username=postgres;Password=postgres
+
+    ports:
+      - "5000:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: projetoz-frontend
+
+    depends_on:
+      - api
+
+    ports:
+      - "3000:3000"
+
+  nginx:
+    image: nginx:latest
+
+    container_name: projetoz-nginx
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+    depends_on:
+      - frontend
+      - api
+
+volumes:
+  postgres-data:
