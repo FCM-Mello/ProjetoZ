@@ -10,5 +10,17 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    public DbSet<Product> Products => Set<Product>();
+
     public DbSet<User> Users => Set<User>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>()
+            .OwnsOne(x => x.Profile);
+    }
+
+    public DbSet<Category> Categorys => Set<Category>();
 }

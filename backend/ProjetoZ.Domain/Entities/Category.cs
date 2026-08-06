@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace ProjetoZ.Domain.Entities
 {
-    internal class Category
+    public class Category
     {
+        public Guid Id { get; set; }
+
+        public string Nome { get; set; }
     }
 }

@@ -22,23 +22,122 @@ namespace ProjetoZ.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ProjetoZ.Domain.Entities.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categorys");
+                });
+
+            modelBuilder.Entity("ProjetoZ.Domain.Entities.Product", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Categoria")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Estoque")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Imagem")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Preco")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Products");
+                });
+
             modelBuilder.Entity("ProjetoZ.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Coins")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("SteamId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UltimoLogin")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ProjetoZ.Domain.Entities.Product", b =>
+                {
+                    b.HasOne("ProjetoZ.Domain.Entities.User", null)
+                        .WithMany("Inventario")
+                        .HasForeignKey("UserId");
+                });
+
+            modelBuilder.Entity("ProjetoZ.Domain.Entities.User", b =>
+                {
+                    b.OwnsOne("ProjetoZ.Domian.Models.SteamProfile", "Profile", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Avatar")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("ProfileUrl")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("SteamId")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("UserId");
+
+                            b1.ToTable("Users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("ProjetoZ.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Inventario");
                 });
 #pragma warning restore 612, 618
         }

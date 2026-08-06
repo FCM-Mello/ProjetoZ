@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AspNet.Security.OpenId.Steam" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.18" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.18" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
@@ -14,9 +16,13 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ProjetoZ.Application\ProjetoZ.Application.csproj" />
+    <ProjectReference Include="..\ProjetoZ.Domain\ProjetoZ.Domain.csproj" />
+    <ProjectReference Include="..\ProjetoZ.Infrastructure\ProjetoZ.Infrastructure.csproj" />
     <ProjectReference Include="..\ProjetoZ.Persistence\ProjetoZ.Persistence.csproj" />
   </ItemGroup>
 
