@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { Product } from "../models/Product";
@@ -65,9 +66,9 @@ export default function Inventario() {
                             </span>
                         </div>
 
-                        <a className="vipButton" href="/Vip">
+                        <Link className="vipButton" href="/Vip">
                             Renovar / upgrade
-                        </a>
+                        </Link>
                     </>
                 ) : (
                     <>
@@ -76,9 +77,9 @@ export default function Inventario() {
                             <span className="vipDescricao">Compre um dos planos VIP e desbloqueie benefícios exclusivos no servidor.</span>
                         </div>
 
-                        <a className="vipButton" href="/Vip">
+                        <Link className="vipButton" href="/Vip">
                             Ver planos VIP
-                        </a>
+                        </Link>
                     </>
                 )}
             </div>

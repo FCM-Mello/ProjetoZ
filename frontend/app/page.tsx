@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="center-card">
@@ -5,7 +7,7 @@ export default function Home() {
       <p>
         Bem-vindo à loja.
       </p>
-      <a href="/Home" className="buttonConfirm">Confirmar</a>
+      <Link href="/Home" className="buttonConfirm">Confirmar</Link>
     </div>
   );
 }

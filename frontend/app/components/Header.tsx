@@ -1,4 +1,5 @@
 import "./Header.css"
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -16,11 +17,12 @@ export default function Header() {
                 <div className="logo"></div>
 
                 <nav className="navHeader navMain">
-                    <a href="/Home" className={linkClass("/Home")}>LOJA</a>
-                    <a href="/Inventario" className={linkClass("/Inventario")}>INVENTARIO</a>
-                    <a href="/Az" className={linkClass("/Az")}>AZ</a>
-                    <a href="/Historico" className={linkClass("/Historico")}>HISTÓRICO</a>
-                    <a href="/Sorteios" className={linkClass("/Sorteios")}>SORTEIOS</a>
+                    <Link href="/Home" className={linkClass("/Home")}>LOJA</Link>
+                    <Link href="/Inventario" className={linkClass("/Inventario")}>INVENTARIO</Link>
+                    <Link href="/Az" className={linkClass("/Az")}>AZ</Link>
+                    <Link href="/Vip" className={linkClass("/Vip")}>VIP</Link>
+                    <Link href="/Historico" className={linkClass("/Historico")}>HISTÓRICO</Link>
+                    <Link href="/Sorteios" className={linkClass("/Sorteios")}>SORTEIOS</Link>
                 </nav>
 
             {!loading && !user && (
@@ -31,9 +33,9 @@ export default function Header() {
 
             {user && (
                 <div className="navUser">
-                    <a href="/Az" className="coinBadge" title="Comprar Az Coins">
+                    <Link href="/Az" className="coinBadge" title="Comprar Az Coins">
                         🪙 {user.coins}
-                    </a>
+                    </Link>
 
                     <a href={user.profile.profileUrl} className="userLink">
                         <img className="profile"
