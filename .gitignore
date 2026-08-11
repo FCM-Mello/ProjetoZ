@@ -18,3 +18,4 @@ dist/
 
 # Segredos locais (docker-compose lê ".env" automaticamente)
 .env
+efbundle-linux
