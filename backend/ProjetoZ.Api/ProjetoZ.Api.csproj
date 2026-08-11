@@ -22,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="admins.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProjetoZ.Application\ProjetoZ.Application.csproj" />
     <ProjectReference Include="..\ProjetoZ.Domain\ProjetoZ.Domain.csproj" />
     <ProjectReference Include="..\ProjetoZ.Infrastructure\ProjetoZ.Infrastructure.csproj" />

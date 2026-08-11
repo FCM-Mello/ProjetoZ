@@ -264,4 +264,24 @@
 
 @media (max-width: 700px){
     .slot{ flex-basis: 25%; }
+
+    .vipSection{
+        flex-wrap:wrap;
+    }
+
+    .vipButton{
+        width:100%;
+
+        text-align:center;
+    }
+}
+
+@media (max-width: 420px){
+    .slot{ flex-basis: 33.333%; }
+
+    .inventarioHeader{
+        flex-wrap:wrap;
+
+        gap:8px;
+    }
 }

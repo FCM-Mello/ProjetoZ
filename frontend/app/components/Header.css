@@ -150,3 +150,64 @@
   background-position:center;
   background-repeat:no-repeat;
 }
+
+@media (max-width: 900px){
+    .navHeader{
+        gap:16px;
+    }
+
+    .navHeader a{
+        padding:6px 12px;
+    }
+}
+
+@media (max-width: 768px){
+    .header{
+        height:auto;
+
+        padding:14px 0;
+    }
+
+    .containerHeader{
+        flex-direction:column;
+
+        gap:14px;
+
+        margin-top:0;
+    }
+
+    .navMain{
+        position:static;
+
+        transform:none;
+    }
+
+    .navHeader{
+        flex-wrap:wrap;
+
+        justify-content:center;
+
+        gap:8px;
+    }
+
+    .navHeader a{
+        padding:6px 10px;
+
+        min-width:0;
+
+        font-size:11px;
+    }
+
+    .logo{
+        width:56px;
+        height:56px;
+    }
+
+    .navUser{
+        gap:10px;
+    }
+
+    .userName{
+        display:none;
+    }
+}

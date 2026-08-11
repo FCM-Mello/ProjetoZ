@@ -28,6 +28,9 @@
     box-shadow: var(--shadow-panel);
 
     max-width: 90%;
+    max-height: 90vh;
+
+    overflow-y: auto;
 
     display: flex;
     flex-direction: column;
@@ -121,4 +124,24 @@
 
 .btnSave:hover {
     background: var(--color-accent-strong);
+}
+
+@media (max-width: 640px){
+    .modal{
+        padding:24px 20px;
+
+        min-height:auto;
+    }
+
+    .modal.modal-small{
+        width:100%;
+    }
+
+    .modal-buttons{
+        flex-direction:column-reverse;
+    }
+
+    .modal-buttons button{
+        width:100%;
+    }
 }

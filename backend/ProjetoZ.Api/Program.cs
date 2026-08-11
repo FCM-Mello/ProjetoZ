@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ProjetoZ.Api.Authorization;
 using ProjetoZ.Api.Services;
 using ProjetoZ.Persistence;
 using System.Text;
@@ -109,7 +111,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHttpClient<SteamService>();
 builder.Services.AddHttpClient<MercadoPagoService>();
-builder.Services.AddAuthorization();
+
+builder.Services.AddSingleton<AdminsProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.Requirements.Add(new AdminRequirement()));
+});
 
 var app = builder.Build();
 

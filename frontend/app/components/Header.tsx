@@ -19,6 +19,7 @@ export default function Header() {
                     <a href="/Home" className={linkClass("/Home")}>LOJA</a>
                     <a href="/Inventario" className={linkClass("/Inventario")}>INVENTARIO</a>
                     <a href="/Az" className={linkClass("/Az")}>AZ</a>
+                    <a href="/Historico" className={linkClass("/Historico")}>HISTÓRICO</a>
                 </nav>
 
             {!loading && !user && (

@@ -123,6 +123,16 @@ public class CoinsController : ControllerBase
                 pedido.Status = "approved";
                 pedido.MercadoPagoPaymentId = paymentId;
 
+                _context.Compras.Add(new Compra
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Tipo = "coins",
+                    Descricao = Pacotes.TryGetValue(pedido.PackageId, out var pacote) ? pacote.Nome : pedido.PackageId,
+                    Coins = pedido.Coins,
+                    ValorReais = pedido.Valor,
+                });
+
                 await _context.SaveChangesAsync();
             }
         }

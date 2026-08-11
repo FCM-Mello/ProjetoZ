@@ -163,3 +163,19 @@
 .pacote-prata{ border-top-color:#c7ccd1; }
 .pacote-ouro{ border-top-color:#ffd166; }
 .pacote-platina{ border-top-color:#9fe8ff; }
+
+@media (max-width: 640px){
+    .azHeader{
+        flex-wrap:wrap;
+
+        gap:12px;
+    }
+
+    .saldoAtual{
+        align-items:flex-start;
+    }
+
+    .pacote-card{
+        flex:1 1 100%;
+    }
+}

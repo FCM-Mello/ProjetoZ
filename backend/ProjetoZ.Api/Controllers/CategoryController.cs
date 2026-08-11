@@ -28,6 +28,7 @@ namespace ProjetoZ.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> Create(CreateCategoryRequest request)
         {
             var category = new Category
@@ -43,6 +44,7 @@ namespace ProjetoZ.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var category = await _context.Categorys.FindAsync(id);

@@ -38,7 +38,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Create(CreateProductRequest request)
     {
         var product = new Product
@@ -59,7 +59,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Update(Guid id, UpdateProductRequest request)
     {
         var product = await _context.Products.FindAsync(id);
@@ -80,7 +80,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var product = await _context.Products.FindAsync(id);
@@ -127,6 +127,15 @@ public class ProductsController : ControllerBase
 
         user.Coins -= preco;
         user.Inventario = [.. user.Inventario, product.Id];
+
+        _context.Compras.Add(new Compra
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Tipo = "produto",
+            Descricao = product.Nome,
+            Coins = preco,
+        });
 
         await _context.SaveChangesAsync();
 

@@ -80,6 +80,7 @@ h1, h2, h3, h4{
 .center-card{
 
     width:900px;
+    max-width:92vw;
 
     min-height:500px;
 
@@ -96,6 +97,8 @@ h1, h2, h3, h4{
     border:1px solid var(--color-border);
 
     box-shadow: var(--shadow-panel);
+
+    position:relative;
 }
 
 .center-container{
@@ -126,4 +129,21 @@ h1, h2, h3, h4{
 .buttonConfirm:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 20px rgba(255,159,28,.35);
+}
+
+@media (max-width: 640px){
+    .center-card{
+        min-height:auto;
+
+        padding:24px 20px 90px;
+    }
+
+    .buttonConfirm{
+        right:20px;
+        bottom:20px;
+
+        padding:12px 22px;
+
+        font-size:14px;
+    }
 }
