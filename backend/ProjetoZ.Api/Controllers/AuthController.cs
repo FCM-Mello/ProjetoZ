@@ -18,15 +18,18 @@ namespace ProjetoZ.Api.Controllers
         private readonly ApplicationDbContext _context;
         private readonly SteamService _steamService;
         private readonly JwtService _jwtService;
+        private readonly IConfiguration _configuration;
 
         public AuthController(
             ApplicationDbContext context,
             SteamService steamService,
-            JwtService jwtService)
+            JwtService jwtService,
+            IConfiguration configuration)
         {
             _context = context;
             _steamService = steamService;
             _jwtService = jwtService;
+            _configuration = configuration;
         }
 
         [HttpGet("steam/login")]
@@ -44,11 +47,6 @@ namespace ProjetoZ.Api.Controllers
         [HttpGet("steam/callback")]
         public async Task<IActionResult> SteamCallback()
         {
-            Console.WriteLine($"Scheme: {Request.Scheme}");
-            Console.WriteLine($"Host: {Request.Host}");
-            Console.WriteLine($"PathBase: {Request.PathBase}");
-            Console.WriteLine($"Url: {Request.Scheme}://{Request.Host}");
-
             var result = await HttpContext.AuthenticateAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -92,8 +90,11 @@ namespace ProjetoZ.Api.Controllers
 
             var token = _jwtService.Generate(user);
 
+            var frontendUrl = _configuration["App:FrontendUrl"]
+                ?? throw new InvalidOperationException("App:FrontendUrl não configurado.");
+
             return Redirect(
-                $"http://projetoz.local/Auth/Callback?token={Uri.EscapeDataString(token)}");
+                $"{frontendUrl}/Auth/Callback?token={Uri.EscapeDataString(token)}");
         }
 
         [Authorize]
