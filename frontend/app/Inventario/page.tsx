@@ -64,16 +64,20 @@ export default function Inventario() {
                                 {user!.vipExpiraEm && `Válido até ${formatarData(user!.vipExpiraEm)}.`} Você tem acesso aos benefícios exclusivos de membro VIP.
                             </span>
                         </div>
+
+                        <a className="vipButton" href="/Vip">
+                            Renovar / upgrade
+                        </a>
                     </>
                 ) : (
                     <>
                         <div className="vipTexto">
                             <span className="vipTitulo">Você ainda não é VIP</span>
-                            <span className="vipDescricao">Participe de um sorteio pra concorrer a um dos níveis de VIP.</span>
+                            <span className="vipDescricao">Compre um dos planos VIP e desbloqueie benefícios exclusivos no servidor.</span>
                         </div>
 
-                        <a className="vipButton" href="/Sorteios">
-                            Ver sorteios
+                        <a className="vipButton" href="/Vip">
+                            Ver planos VIP
                         </a>
                     </>
                 )}

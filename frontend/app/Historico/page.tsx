@@ -49,7 +49,7 @@ export default function Historico() {
                 {compras.map(compra => (
                     <div key={compra.id} className="compra-item">
                         <span className={`compra-tipo tipo-${compra.tipo}`}>
-                            {compra.tipo === "produto" ? "Produto" : compra.tipo === "coins" ? "Coins" : "Sorteio"}
+                            {compra.tipo === "produto" ? "Produto" : compra.tipo === "coins" ? "Coins" : compra.tipo === "vip" ? "VIP" : "Sorteio"}
                         </span>
 
                         <div className="compra-info">
@@ -73,6 +73,10 @@ export default function Historico() {
 
                             {compra.tipo === "sorteio" && (
                                 <span className="compra-coins positivo">🏆 Prêmio ganho</span>
+                            )}
+
+                            {compra.tipo === "vip" && (
+                                <span className="compra-coins negativo">-🪙 {compra.coins}</span>
                             )}
                         </div>
                     </div>
