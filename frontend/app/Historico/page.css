@@ -77,6 +77,11 @@
     color: var(--color-danger-strong);
 }
 
+.tipo-mod {
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+}
+
 .compra-info {
     flex: 1;
     min-width: 0;

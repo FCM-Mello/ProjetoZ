@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjetoZ.Api.Services;
 using ProjetoZ.Application.DTOs;
+using ProjetoZ.Domain.Entities;
 using ProjetoZ.Persistence;
 using System.Security.Cryptography;
 using System.Text;
@@ -72,6 +73,47 @@ public class GameController : ControllerBase
             Coins = user.Coins,
             Inventario = inventario
         });
+    }
+
+    // Debita coins de um jogador ao comprar um item dentro da loja do mod
+    // (itens que só existem no jogo, não cadastrados na tabela Products).
+    // A compra é registrada em Compras (Tipo = "mod") pra aparecer também
+    // no histórico do site.
+    [HttpPost("comprar")]
+    public async Task<IActionResult> Comprar(PlayerComprarRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        if (string.IsNullOrWhiteSpace(request.ItemId) || request.Preco <= 0)
+            return BadRequest("Item inválido.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        if (user == null)
+            return NotFound();
+
+        if (user.Coins < request.Preco)
+            return BadRequest("Saldo de Az Coins insuficiente.");
+
+        user.Coins -= request.Preco;
+
+        _context.Compras.Add(new Compra
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Tipo = "mod",
+            Descricao = string.IsNullOrWhiteSpace(request.ItemNome) ? request.ItemId : request.ItemNome,
+            Coins = request.Preco,
+        });
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { coins = user.Coins });
     }
 
     private bool ValidarApiKey(string? providedKey)
