@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres
 
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -34,7 +34,7 @@ services:
       App__BackendUrl: ${APP_BACKEND_URL}
 
     ports:
-      - "5000:8080"
+      - "127.0.0.1:5000:8080"
 
   frontend:
     build:
@@ -46,7 +46,7 @@ services:
       - api
 
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
   nginx:
     image: nginx:latest
