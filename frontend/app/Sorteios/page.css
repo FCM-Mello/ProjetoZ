@@ -1,0 +1,259 @@
+.containerSorteios {
+    width: 90%;
+    max-width: 1100px;
+    margin: 40px auto;
+}
+
+.sorteiosHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:25px;
+}
+
+.section-title {
+    color: var(--color-text);
+
+    font-size: 20px;
+
+    padding-left: 12px;
+
+    border-left: 4px solid var(--color-info);
+}
+
+.btnCriarSorteio{
+    padding:12px 22px;
+
+    border:none;
+    border-radius:8px;
+
+    cursor:pointer;
+
+    background: var(--color-success);
+    color:#06210f;
+
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+    font-size:13px;
+
+    transition:.2s;
+}
+
+.btnCriarSorteio:hover{
+    background: var(--color-success-strong);
+}
+
+.sorteiosVazio{
+    color: var(--color-text-muted);
+    padding:40px 0;
+    text-align:center;
+}
+
+.lista-sorteios{
+    display:flex;
+    flex-direction:column;
+
+    gap:16px;
+}
+
+.sorteio-card{
+    padding:20px 24px;
+
+    background: var(--color-surface);
+
+    border:1px solid var(--color-border);
+    border-left:4px solid var(--color-border-strong);
+
+    border-radius:8px;
+
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.sorteio-card.status-aberto{
+    border-left-color: var(--color-info);
+}
+
+.sorteio-card.status-sorteado{
+    border-left-color: var(--color-coin);
+    opacity:.85;
+}
+
+.sorteio-cabecalho{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+}
+
+.sorteio-cabecalho h3{
+    color: var(--color-text);
+    font-size:16px;
+}
+
+.sorteio-status{
+    flex-shrink:0;
+
+    padding:4px 12px;
+
+    border-radius:20px;
+
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+}
+
+.sorteio-status.status-aberto{
+    background: rgba(56,189,248,.16);
+    color: var(--color-info);
+}
+
+.sorteio-status.status-sorteado{
+    background: rgba(255,209,102,.16);
+    color: var(--color-coin);
+}
+
+.sorteio-descricao{
+    color: var(--color-text-muted);
+    font-size:14px;
+}
+
+.sorteio-premios{
+    display:flex;
+    flex-wrap:wrap;
+
+    gap:8px;
+}
+
+.sorteio-premio{
+    display:flex;
+    align-items:center;
+    gap:6px;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    font-size:12px;
+    font-weight:600;
+}
+
+.sorteio-premio img{
+    width:18px;
+    height:18px;
+
+    object-fit:cover;
+
+    border-radius:3px;
+}
+
+.premio-vip{
+    background: rgba(255,209,102,.14);
+    color: var(--color-coin);
+}
+
+.premio-produto{
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
+}
+
+.sorteio-rodape{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:12px;
+
+    flex-wrap:wrap;
+}
+
+.sorteio-participantes{
+    color: var(--color-text-muted);
+    font-size:13px;
+}
+
+.sorteio-vencedor{
+    color: var(--color-coin);
+    font-weight:700;
+    font-size:14px;
+}
+
+.sorteio-acoes{
+    display:flex;
+    gap:10px;
+}
+
+.btnEntrar,
+.btnSortear{
+    padding:10px 20px;
+
+    border:none;
+    border-radius:8px;
+
+    cursor:pointer;
+
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+    font-size:12px;
+
+    transition:.2s;
+}
+
+.btnEntrar{
+    background: var(--color-accent);
+    color:#1a1004;
+}
+
+.btnEntrar:hover:not(:disabled){
+    background: var(--color-accent-strong);
+}
+
+.btnEntrar:disabled{
+    opacity:.6;
+    cursor:default;
+}
+
+.btnSortear{
+    background: var(--color-danger);
+    color:#2b0505;
+}
+
+.btnSortear:hover:not(:disabled){
+    background: var(--color-danger-strong);
+}
+
+.btnSortear:disabled{
+    opacity:.6;
+    cursor:default;
+}
+
+@media (max-width: 640px){
+    .sorteiosHeader{
+        flex-wrap:wrap;
+        gap:12px;
+    }
+
+    .btnCriarSorteio{
+        width:100%;
+    }
+
+    .sorteio-rodape{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .sorteio-acoes{
+        width:100%;
+    }
+
+    .btnEntrar,
+    .btnSortear{
+        flex:1;
+    }
+}

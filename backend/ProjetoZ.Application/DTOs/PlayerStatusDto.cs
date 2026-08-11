@@ -6,6 +6,12 @@ namespace ProjetoZ.Application.DTOs
 
         public bool Vip { get; set; }
 
+        public int VipNivel { get; set; }
+
+        public string? VipNivelNome { get; set; }
+
+        public DateTime? VipExpiraEm { get; set; }
+
         public int Coins { get; set; }
 
         public List<PlayerInventoryItemDto> Inventario { get; set; } = new();

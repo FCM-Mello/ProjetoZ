@@ -20,6 +20,7 @@ export default function Header() {
                     <a href="/Inventario" className={linkClass("/Inventario")}>INVENTARIO</a>
                     <a href="/Az" className={linkClass("/Az")}>AZ</a>
                     <a href="/Historico" className={linkClass("/Historico")}>HISTÓRICO</a>
+                    <a href="/Sorteios" className={linkClass("/Sorteios")}>SORTEIOS</a>
                 </nav>
 
             {!loading && !user && (

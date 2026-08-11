@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProjetoZ.Api.Services;
 using ProjetoZ.Application.DTOs;
 using ProjetoZ.Persistence;
 using System.Security.Cryptography;
@@ -45,15 +46,9 @@ public class GameController : ControllerBase
             .Where(p => idsUnicos.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id);
 
-        var categoriaVip = await _context.Categorys
-            .FirstOrDefaultAsync(c => c.Nome.ToLower() == "vip");
-
         var inventarioEncontrado = user.Inventario
             .Where(id => produtosPorId.ContainsKey(id))
             .ToList();
-
-        var vip = categoriaVip != null &&
-            inventarioEncontrado.Any(id => produtosPorId[id].Categoria == categoriaVip.Id);
 
         var inventario = inventarioEncontrado
             .GroupBy(id => id)
@@ -65,10 +60,15 @@ public class GameController : ControllerBase
             })
             .ToList();
 
+        var vipNivel = VipTiers.NivelEfetivo(user.VipNivel, user.VipExpiraEm);
+
         return Ok(new PlayerStatusDto
         {
             SteamId = request.SteamId,
-            Vip = vip,
+            Vip = vipNivel > 0,
+            VipNivel = vipNivel,
+            VipNivelNome = vipNivel > 0 ? VipTiers.NomeDoNivel(vipNivel) : null,
+            VipExpiraEm = vipNivel > 0 ? user.VipExpiraEm : null,
             Coins = user.Coins,
             Inventario = inventario
         });

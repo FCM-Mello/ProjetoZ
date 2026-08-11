@@ -7,4 +7,7 @@ export interface User {
     inventario: Array<Product>;
     coins: number;
     isAdmin: boolean;
+    vipNivel: number;
+    vipNivelNome: string | null;
+    vipExpiraEm: string | null;
 }

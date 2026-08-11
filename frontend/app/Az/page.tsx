@@ -77,10 +77,19 @@ export default function Az() {
         }
     }
 
+    const melhorValor = pacotes.length > 0
+        ? pacotes.reduce((melhor, atual) =>
+            (atual.coins / atual.precoReais) > (melhor.coins / melhor.precoReais) ? atual : melhor
+        ).id
+        : null;
+
     return (
         <main className="containerAz">
-            <div className="azHeader">
+            <div className="azVault">
+                <div className="azVaultGlow" />
+
                 <h2 className="section-title">Az Coins</h2>
+                <p className="azSubtitulo">Compre Az Coins e desbloqueie itens exclusivos na loja</p>
 
                 <div className="saldoAtual">
                     <span className="saldoLabel">Saldo atual</span>
@@ -97,9 +106,17 @@ export default function Az() {
             <div className="grid-pacotes">
                 {pacotes.map(pacote => (
                     <div key={pacote.id} className={`pacote-card pacote-${pacote.id}`}>
+                        {pacote.id === melhorValor && (
+                            <span className="pacote-badge">Melhor valor</span>
+                        )}
+
+                        <div className="pacote-medalha">
+                            <span className="pacote-medalha-icone">🪙</span>
+                        </div>
+
                         <span className="pacote-nome">{pacote.nome}</span>
 
-                        <span className="pacote-coins">🪙 {pacote.coins}</span>
+                        <span className="pacote-coins">{pacote.coins.toLocaleString("pt-BR")}</span>
 
                         <span className="pacote-preco">
                             R$ {pacote.precoReais.toFixed(2)}

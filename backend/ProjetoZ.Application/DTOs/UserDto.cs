@@ -19,5 +19,11 @@ namespace ProjetoZ.Application.DTOs
         public int Coins { get; set; }
 
         public bool IsAdmin { get; set; }
+
+        public int VipNivel { get; set; }
+
+        public string? VipNivelNome { get; set; }
+
+        public DateTime? VipExpiraEm { get; set; }
     }
 }

@@ -27,4 +27,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<PedidoCoins> PedidosCoins => Set<PedidoCoins>();
 
     public DbSet<Compra> Compras => Set<Compra>();
+
+    public DbSet<Sorteio> Sorteios => Set<Sorteio>();
+
+    public DbSet<SorteioParticipante> SorteioParticipantes => Set<SorteioParticipante>();
 }

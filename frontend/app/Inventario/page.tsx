@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
-import { getCategories } from "../services/categoriesApi";
-import { Category } from "../models/Category";
 import { Product } from "../models/Product";
 import "./page.css";
 
@@ -20,11 +17,6 @@ export default function Inventario() {
     useRequireAuth();
 
     const { user } = useAuth();
-    const [categorias, setCategorias] = useState<Category[]>([]);
-
-    useEffect(() => {
-        getCategories().then(setCategorias).catch(console.error);
-    }, []);
 
     const itens = user?.inventario ?? [];
 
@@ -40,8 +32,7 @@ export default function Inventario() {
         }, {})
     );
 
-    const categoriaVip = categorias.find(c => c.nome.toLowerCase() === "vip");
-    const vipAtivo = categoriaVip ? itens.some(p => p.categoria === categoriaVip.id) : false;
+    const vipAtivo = (user?.vipNivel ?? 0) > 0;
 
     const totalSlots = Math.max(
         COLUNAS * LINHAS_MINIMAS,
@@ -49,6 +40,10 @@ export default function Inventario() {
     );
 
     const slotsVazios = Math.max(0, totalSlots - itensAgrupados.length);
+
+    function formatarData(data: string) {
+        return new Date(data).toLocaleDateString("pt-BR");
+    }
 
     return (
         <main className="containerInventario">
@@ -64,22 +59,21 @@ export default function Inventario() {
                         <span className="vipIcone">★</span>
 
                         <div className="vipTexto">
-                            <span className="vipTitulo">VIP Ativo</span>
-                            <span className="vipDescricao">Você tem acesso aos benefícios exclusivos de membro VIP.</span>
+                            <span className="vipTitulo">VIP {user!.vipNivelNome} Ativo</span>
+                            <span className="vipDescricao">
+                                {user!.vipExpiraEm && `Válido até ${formatarData(user!.vipExpiraEm)}.`} Você tem acesso aos benefícios exclusivos de membro VIP.
+                            </span>
                         </div>
                     </>
                 ) : (
                     <>
                         <div className="vipTexto">
                             <span className="vipTitulo">Você ainda não é VIP</span>
-                            <span className="vipDescricao">Adquira um item VIP na loja para desbloquear benefícios exclusivos.</span>
+                            <span className="vipDescricao">Participe de um sorteio pra concorrer a um dos níveis de VIP.</span>
                         </div>
 
-                        <a
-                            className="vipButton"
-                            href={categoriaVip ? `/Home?categoria=${categoriaVip.id}` : "/Home"}
-                        >
-                            Ver itens VIP na loja
+                        <a className="vipButton" href="/Sorteios">
+                            Ver sorteios
                         </a>
                     </>
                 )}

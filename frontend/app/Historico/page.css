@@ -1,6 +1,6 @@
 .containerHistorico {
     width: 90%;
-    max-width: 900px;
+    max-width: 1100px;
     margin: 40px auto;
 }
 
@@ -65,6 +65,11 @@
 .tipo-coins {
     background: rgba(255, 209, 102, .16);
     color: var(--color-coin);
+}
+
+.tipo-sorteio {
+    background: rgba(56, 189, 248, .16);
+    color: var(--color-info);
 }
 
 .compra-info {

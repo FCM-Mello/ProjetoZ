@@ -127,13 +127,18 @@ namespace ProjetoZ.Api.Controllers
                 .Select(id => produtosPorId[id])
                 .ToList();
 
+            var vipNivel = VipTiers.NivelEfetivo(user.VipNivel, user.VipExpiraEm);
+
             return Ok(new UserDto
             {
                 Id = user.Id,
                 Profile = user.Profile ?? new Domian.Models.SteamProfile(),
                 Coins = user.Coins,
                 Inventario = inventario,
-                IsAdmin = _adminsProvider.IsAdmin(user.Profile?.SteamId)
+                IsAdmin = _adminsProvider.IsAdmin(user.Profile?.SteamId),
+                VipNivel = vipNivel,
+                VipNivelNome = vipNivel > 0 ? VipTiers.NomeDoNivel(vipNivel) : null,
+                VipExpiraEm = vipNivel > 0 ? user.VipExpiraEm : null
             });
         }
 

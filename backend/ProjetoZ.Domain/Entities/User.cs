@@ -13,6 +13,12 @@ public class User
     public DateTime UltimoLogin { get; set; }
 
     public int Coins { get; set; } = 0;
-    
+
     public List<Guid> Inventario { get; set; } = new List<Guid>();
+
+    // VIP é um atributo fixo do usuário (não um produto): nível 0 = sem VIP,
+    // 1-3 = Bronze/Prata/Ouro. Expira automaticamente após VipExpiraEm.
+    public int VipNivel { get; set; } = 0;
+
+    public DateTime? VipExpiraEm { get; set; }
 }
