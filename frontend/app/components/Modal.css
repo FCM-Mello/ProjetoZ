@@ -49,6 +49,30 @@
     min-height: auto;
 }
 
+.modal-field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.modal-field label{
+    color: var(--color-text-muted);
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+}
+
+.modal-row{
+    display:flex;
+    gap:15px;
+}
+
+.modal-row .modal-field{
+    flex:1;
+    min-width:0;
+}
+
 .modal input,
 .modal textarea,
 .modal select {
@@ -81,6 +105,53 @@
 .modal textarea:focus,
 .modal select:focus {
     border-color: var(--color-accent);
+}
+
+.dropzone{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    min-height:120px;
+
+    padding:16px;
+
+    border:2px dashed var(--color-border-strong);
+    border-radius:8px;
+
+    background: var(--color-bg-alt);
+
+    cursor:pointer;
+
+    text-align:center;
+
+    transition:.2s;
+
+    overflow:hidden;
+}
+
+.dropzone:hover,
+.dropzone-ativo{
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+}
+
+.dropzone-texto{
+    color: var(--color-text-muted);
+    font-size:13px;
+}
+
+.dropzone-preview{
+    max-width:100%;
+    max-height:180px;
+
+    object-fit:contain;
+
+    border-radius:6px;
+}
+
+.dropzone-input{
+    display:none;
 }
 
 .modal-buttons {
@@ -143,5 +214,11 @@
 
     .modal-buttons button{
         width:100%;
+    }
+
+    .modal-row{
+        flex-direction:column;
+
+        gap:15px;
     }
 }
