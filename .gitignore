@@ -15,3 +15,6 @@ obj/
 # Node / Frontend (se aplicável)
 node_modules/
 dist/
+
+# Segredos locais (docker-compose lê ".env" automaticamente)
+.env

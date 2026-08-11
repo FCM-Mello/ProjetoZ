@@ -14,5 +14,5 @@ public class User
 
     public int Coins { get; set; } = 0;
     
-    public List<Product> Inventario { get; set; } = new List<Product>();
+    public List<Guid> Inventario { get; set; } = new List<Guid>();
 }

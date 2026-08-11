@@ -1,0 +1,21 @@
+.containerHome {
+    width: 90%;
+    margin: 40px auto;
+}
+
+.containerHome h1 {
+    color: var(--color-text);
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: var(--color-text);
+
+    font-size: 20px;
+
+    margin: 10px 0 15px;
+
+    padding-left: 12px;
+
+    border-left: 4px solid var(--color-accent);
+}

@@ -1,122 +1,108 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getProducts, createProduct, deleteProduct } from "../services/productsApi";
-import { useRouter } from "next/navigation";
-import { Product } from "../models/Product";
-import ProductModal from "../Components/ProductModal";
-import "./page.css";
+import ProductModal from "../components/ProductModal";
+import CategoryModal from "../components/CategoryModal";
+import Toolbar from "./components/Toolbar";
+import ProdutoGrid from "./components/ProdutoGrid";
+import ContextMenu from "./components/ContextMenu";
+import { useHome } from "./useHome";
+import "./css/home.css";
 
 export default function Home() {
-    const [search, setSearch] = useState("");
-    const [produtos, setProdutos] = useState<Product[]>([]);
-    const [showModal, setShowModal] = useState(false);
-    const router = useRouter();
+    const {
+        search,
+        setSearch,
+        filtroCategoria,
+        toggleFiltroCategoria,
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
+        produtosFiltrados,
+        categorias,
 
-        if (!token) {
-            router.push("/Auth/Login");
-        }
+        showModal,
+        setShowModal,
+        editingProduct,
+        setEditingProduct,
+        showCategoryModal,
+        setShowCategoryModal,
 
-    }, []);
+        deleteMode,
+        createMode,
+        toggleCreateMode,
+        modeDelete,
+        modeCreate,
 
-    useEffect(() => {
-        carregarProdutos();
-    }, []);
+        selectedProducts,
+        selectedCategories,
+        toggleProduct,
+        toggleCategory,
 
-    async function salvarProduto(product: Product) {
-        try {
-            await createProduct(product);
-            alert("Produto cadastrado!");
-            carregarProdutos();
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao cadastrar.");
-        }
-    }
+        onExcluirClick,
 
+        iniciarCriacaoProduto,
+        iniciarCriacaoCategoria,
 
-    async function carregarProdutos() {
-        try {
-            const dados = await getProducts();
-            setProdutos(dados);
-        }
-            catch (e) {
-            console.error(e);
-        }
-    }
+        contextMenu,
+        abrirMenuContexto,
+        editarProduto,
 
-    function excluirProduto() {
-        console.log("Excluir");
-    }
+        salvarProduto,
+        salvarCategoria,
+        comprarProduto,
+    } = useHome();
 
     return (
-    <main className="containerHome">
-<div className="toolbar">
+        <main className="containerHome">
+            <Toolbar
+                search={search}
+                onSearchChange={setSearch}
+                categorias={categorias}
+                filtroCategoria={filtroCategoria}
+                onToggleFiltro={toggleFiltroCategoria}
+                selectedCategories={selectedCategories}
+                onToggleCategoriaSelecionada={toggleCategory}
+                onCriarCategoria={iniciarCriacaoCategoria}
+                deleteMode={deleteMode}
+                createMode={createMode}
+                onCancelar={() => { modeDelete(false); modeCreate(false); }}
+                onToggleCreateMode={toggleCreateMode}
+                onExcluirClick={onExcluirClick}
+            />
 
-                <input
-                    className="search"
-                    type="text"
-                    placeholder="Pesquisar..."
-                    value={search}
-                    onChange={(e)=>setSearch(e.target.value)}
+            <h2 className="section-title">Produtos</h2>
+
+            <ProdutoGrid
+                produtos={produtosFiltrados}
+                deleteMode={deleteMode}
+                createMode={createMode}
+                selectedProducts={selectedProducts}
+                onToggleSelecionado={toggleProduct}
+                onContextMenu={abrirMenuContexto}
+                onCriar={iniciarCriacaoProduto}
+                onComprar={comprarProduto}
+            />
+
+            {showModal && (
+                <ProductModal
+                    product={editingProduct ?? undefined}
+                    categorias={categorias}
+                    onClose={() => { setShowModal(false); setEditingProduct(null); }}
+                    onSave={salvarProduto}
                 />
+            )}
 
-                <div className="toolbar-buttons">
+            {showCategoryModal && (
+                <CategoryModal
+                    onClose={() => setShowCategoryModal(false)}
+                    onSave={salvarCategoria}
+                />
+            )}
 
-                    <button
-                        className="btnCreate"
-                        onClick={() => setShowModal(true)}>
-                        Criar
-                    </button>
-
-                    <button
-                        className="btnDelete"
-                        onClick={excluirProduto}>
-                        Excluir
-                    </button>
-
-                </div>
-
-            </div>
-
-
-
-      <div className="grid-produtos">
-        {produtos
-    .filter(x =>
-        x.nome.toLowerCase().includes(search.toLowerCase()))
-    .map(produto => (
-
-        <div className="card" key={produto.id}>
-            <img src={produto.imagem} />
-
-            <div className="card-body">
-               <h3>{produto.nome}</h3>
-
-<p>{produto.descricao}</p>
-
-<span>R$ {produto.preco.toFixed(2)}</span>
-
-<small>Estoque: {produto.estoque}</small>
-
-<button>Comprar</button>
-            </div>
-
-        </div>
-
-))}
-      </div>
-          {showModal && (
-    <ProductModal
-        onClose={() => setShowModal(false)}
-        onSave={salvarProduto}
-    />
-)}
-    </main>
-
-
-  );
+            {contextMenu && (
+                <ContextMenu
+                    contextMenu={contextMenu}
+                    onEditar={editarProduto}
+                />
+            )}
+        </main>
+    );
 }

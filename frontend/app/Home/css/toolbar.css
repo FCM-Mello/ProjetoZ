@@ -1,0 +1,95 @@
+.toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:30px;
+}
+
+.filtros{
+    display:flex;
+
+    gap:12px;
+}
+
+.search{
+    width:350px;
+
+    padding:12px 18px;
+
+    border:1px solid var(--color-border);
+
+    border-radius:8px;
+
+    background: var(--color-surface);
+
+    color: var(--color-text);
+
+    font-family: inherit;
+    font-size:16px;
+}
+
+.search::placeholder{
+    color: var(--color-text-muted);
+}
+
+.search:focus{
+    outline:none;
+    border-color: var(--color-accent);
+}
+
+.toolbar-buttons{
+    display:flex;
+
+    gap:10px;
+}
+
+.btnCancel,
+.btnCreate,
+.btnDelete{
+
+    padding:12px 22px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+    font-size:13px;
+
+    color: var(--color-bg);
+
+    transition:.2s;
+}
+
+.btnCreate{
+    background: var(--color-success);
+    color: #06210f;
+}
+
+.btnCreate:hover{
+    background: var(--color-success-strong);
+}
+
+.btnDelete{
+    background: var(--color-danger);
+    color: #2b0505;
+}
+
+.btnDelete:hover{
+    background: var(--color-danger-strong);
+}
+
+.btnCancel{
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
+}
+
+.btnCancel:hover{
+    background: var(--color-border-strong);
+    color: var(--color-text);
+}

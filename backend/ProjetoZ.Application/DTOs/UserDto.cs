@@ -1,4 +1,5 @@
-﻿using ProjetoZ.Domian.Models;
+﻿using ProjetoZ.Domain.Entities;
+using ProjetoZ.Domian.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace ProjetoZ.Application.DTOs
         public Guid Id { get; set; }
 
         public SteamProfile Profile { get; set; } = new();
+
+        public List<Product> Inventario { get; set; } = new();
 
         public int Coins { get; set; }
     }

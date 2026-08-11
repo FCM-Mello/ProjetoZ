@@ -25,7 +25,20 @@ export async function createProduct(product: Product) {
         throw new Error("Erro ao cadastrar produto");
 }
 
-export async function deleteProduct(id: number) {
+export async function updateProduct(id: string, product: Product) {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(product),
+    });
+
+    if (!response.ok)
+        throw new Error("Erro ao atualizar produto");
+
+    return response.json();
+}
+
+export async function deleteProduct(id: string) {
     const response = await fetch(`${API_URL}/${id}`, {
         headers: authHeaders(),
         method: "DELETE",
@@ -33,4 +46,18 @@ export async function deleteProduct(id: number) {
 
     if (!response.ok)
         throw new Error("Erro ao excluir produto");
+}
+
+export async function purchaseProduct(id: string): Promise<{ coins: number }> {
+    const response = await fetch(`${API_URL}/${id}/comprar`, {
+        method: "POST",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+        const mensagem = await response.text();
+        throw new Error(mensagem || "Erro ao comprar produto");
+    }
+
+    return response.json();
 }

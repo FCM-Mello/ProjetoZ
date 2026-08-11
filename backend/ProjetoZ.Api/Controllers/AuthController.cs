@@ -110,11 +110,25 @@ namespace ProjetoZ.Api.Controllers
             if (user == null)
                 return Unauthorized();
 
+            var idsUnicos = user.Inventario.Distinct().ToList();
+
+            var produtosPorId = await _context.Products
+                .Where(p => idsUnicos.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id);
+
+            // Preserva a multiplicidade: o mesmo produto pode aparecer várias
+            // vezes em Inventario quando o usuário compra mais de uma unidade.
+            var inventario = user.Inventario
+                .Where(id => produtosPorId.ContainsKey(id))
+                .Select(id => produtosPorId[id])
+                .ToList();
+
             return Ok(new UserDto
             {
                 Id = user.Id,
                 Profile = user.Profile ?? new Domian.Models.SteamProfile(),
-                Coins = user.Coins
+                Coins = user.Coins,
+                Inventario = inventario
             });
         }
 

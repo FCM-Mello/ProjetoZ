@@ -23,4 +23,6 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Category> Categorys => Set<Category>();
+
+    public DbSet<PedidoCoins> PedidosCoins => Set<PedidoCoins>();
 }

@@ -2,7 +2,7 @@ import { Product } from "./Product";
 import { SteamProfile } from "./SteamProfile";
 
 export interface User {
-    id: number;
+    id: string;
     profile: SteamProfile;
     inventario: Array<Product>;
     coins: number;

@@ -17,7 +17,7 @@ export default function CallbackClient() {
             const token = searchParams.get("token");
 
             if (!token) {
-                router.push("/Login");
+                router.push("/Auth/Login");
                 return;
             }
 

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://projetoz.local/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export function loginSteam() {
     window.location.href = `${API_URL}/auth/steam/login`;

@@ -1,7 +1,7 @@
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.7);
 
     display: flex;
     justify-content: center;
@@ -15,17 +15,17 @@
 
     min-height:500px;
 
-    background:rgba(0,0,0,.55);
+    background: var(--color-surface);
 
     backdrop-filter:blur(15px);
 
-    border-radius:20px;
+    border-radius:16px;
 
     padding:40px;
 
-    border:1px solid rgba(255,255,255,.12);
+    border:1px solid var(--color-border);
 
-    box-shadow:0 15px 40px rgba(0,0,0,.5);
+    box-shadow: var(--shadow-panel);
 
     max-width: 90%;
 
@@ -38,20 +38,35 @@
     margin: 0 0 10px;
     text-align: center;
     font-size: 24px;
+    color: var(--color-text);
+}
+
+.modal.modal-small {
+    width: 420px;
+    min-height: auto;
 }
 
 .modal input,
-.modal textarea {
+.modal textarea,
+.modal select {
     width: 100%;
     padding: 12px;
 
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-strong);
     border-radius: 8px;
 
+    background: var(--color-bg-alt);
+    color: var(--color-text);
+
+    font-family: inherit;
     font-size: 14px;
     outline: none;
 
     box-sizing: border-box;
+}
+
+.modal select {
+    cursor: pointer;
 }
 
 .modal textarea {
@@ -60,8 +75,9 @@
 }
 
 .modal input:focus,
-.modal textarea:focus {
-    border-color: #2563eb;
+.modal textarea:focus,
+.modal select:focus {
+    border-color: var(--color-accent);
 }
 
 .modal-buttons {
@@ -80,24 +96,29 @@
 
     cursor: pointer;
 
-    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+    font-size: 13px;
+
     transition: 0.2s;
 }
 
 .btnCancel {
-    background: #e5e7eb;
-    color: #333;
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
 }
 
 .btnCancel:hover {
-    background: #d1d5db;
+    background: var(--color-border-strong);
+    color: var(--color-text);
 }
 
 .btnSave {
-    background: #2563eb;
-    color: white;
+    background: var(--color-accent);
+    color: #1a1004;
 }
 
 .btnSave:hover {
-    background: #1d4ed8;
+    background: var(--color-accent-strong);
 }
