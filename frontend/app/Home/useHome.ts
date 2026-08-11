@@ -31,7 +31,8 @@ export function useHome() {
 
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
-    const { refreshUser } = useAuth();
+    const { user, refreshUser } = useAuth();
+    const isAdmin = user?.isAdmin ?? false;
 
     useRequireAuth();
 
@@ -222,7 +223,7 @@ export function useHome() {
     function abrirMenuContexto(e: MouseEvent, produto: Product) {
         e.preventDefault();
 
-        if (deleteMode || createMode) return;
+        if (deleteMode || createMode || !isAdmin) return;
 
         setContextMenu({ x: e.clientX, y: e.clientY, produto });
     }
@@ -240,6 +241,8 @@ export function useHome() {
         .filter(x => !filtroCategoria || x.categoria === filtroCategoria);
 
     return {
+        isAdmin,
+
         search,
         setSearch,
         filtroCategoria,

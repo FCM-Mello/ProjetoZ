@@ -6,4 +6,5 @@ export interface User {
     profile: SteamProfile;
     inventario: Array<Product>;
     coins: number;
+    isAdmin: boolean;
 }

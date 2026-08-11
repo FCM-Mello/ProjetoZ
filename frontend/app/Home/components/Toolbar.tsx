@@ -20,6 +20,7 @@ interface Props {
     onCancelar: () => void;
     onToggleCreateMode: () => void;
     onExcluirClick: () => void;
+    isAdmin: boolean;
 }
 
 export default function Toolbar({
@@ -36,6 +37,7 @@ export default function Toolbar({
     onCancelar,
     onToggleCreateMode,
     onExcluirClick,
+    isAdmin,
 }: Props) {
     return (
         <div className="toolbar">
@@ -60,29 +62,31 @@ export default function Toolbar({
                 />
             </div>
 
-            <div className="toolbar-buttons">
+            {isAdmin && (
+                <div className="toolbar-buttons">
 
-                {(deleteMode || createMode) && (
+                    {(deleteMode || createMode) && (
+                        <button
+                            className="btnCancel"
+                            onClick={onCancelar}>
+                            Cancelar
+                        </button>
+                    )}
+
                     <button
-                        className="btnCancel"
-                        onClick={onCancelar}>
-                        Cancelar
+                        className="btnCreate"
+                        onClick={onToggleCreateMode}>
+                        Criar
                     </button>
-                )}
 
-                <button
-                    className="btnCreate"
-                    onClick={onToggleCreateMode}>
-                    Criar
-                </button>
+                    <button
+                        className="btnDelete"
+                        onClick={onExcluirClick}>
+                        Excluir
+                    </button>
 
-                <button
-                    className="btnDelete"
-                    onClick={onExcluirClick}>
-                    Excluir
-                </button>
-
-            </div>
+                </div>
+            )}
         </div>
     );
 }

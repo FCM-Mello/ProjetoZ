@@ -17,5 +17,7 @@ namespace ProjetoZ.Application.DTOs
         public List<Product> Inventario { get; set; } = new();
 
         public int Coins { get; set; }
+
+        public bool IsAdmin { get; set; }
     }
 }

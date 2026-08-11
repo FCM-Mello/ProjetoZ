@@ -19,17 +19,20 @@ namespace ProjetoZ.Api.Controllers
         private readonly SteamService _steamService;
         private readonly JwtService _jwtService;
         private readonly IConfiguration _configuration;
+        private readonly AdminsProvider _adminsProvider;
 
         public AuthController(
             ApplicationDbContext context,
             SteamService steamService,
             JwtService jwtService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            AdminsProvider adminsProvider)
         {
             _context = context;
             _steamService = steamService;
             _jwtService = jwtService;
             _configuration = configuration;
+            _adminsProvider = adminsProvider;
         }
 
         [HttpGet("steam/login")]
@@ -129,7 +132,8 @@ namespace ProjetoZ.Api.Controllers
                 Id = user.Id,
                 Profile = user.Profile ?? new Domian.Models.SteamProfile(),
                 Coins = user.Coins,
-                Inventario = inventario
+                Inventario = inventario,
+                IsAdmin = _adminsProvider.IsAdmin(user.Profile?.SteamId)
             });
         }
 

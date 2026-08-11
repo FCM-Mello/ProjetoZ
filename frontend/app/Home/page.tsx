@@ -10,6 +10,8 @@ import "./css/home.css";
 
 export default function Home() {
     const {
+        isAdmin,
+
         search,
         setSearch,
         filtroCategoria,
@@ -66,6 +68,7 @@ export default function Home() {
                 onCancelar={() => { modeDelete(false); modeCreate(false); }}
                 onToggleCreateMode={toggleCreateMode}
                 onExcluirClick={onExcluirClick}
+                isAdmin={isAdmin}
             />
 
             <h2 className="section-title">Produtos</h2>
