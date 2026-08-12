@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
-import { getSorteios, criarSorteio, entrarSorteio, sortearSorteio } from "../services/sorteiosApi";
+import { getSorteios, criarSorteio, entrarSorteio, sortearSorteio, excluirSorteio } from "../services/sorteiosApi";
 import { getProducts } from "../services/productsApi";
 import { getVipTiers } from "../services/vipApi";
 import { Sorteio, CreateSorteioRequest } from "../models/Sorteio";
@@ -63,6 +63,23 @@ export default function Sorteios() {
         }
     }
 
+    async function excluir(sorteio: Sorteio) {
+        if (!confirm(`Excluir o sorteio "${sorteio.titulo}"? Essa ação não pode ser desfeita.`))
+            return;
+
+        setProcessando(sorteio.id);
+
+        try {
+            await excluirSorteio(sorteio.id);
+            await carregarSorteios();
+        } catch (e) {
+            console.error(e);
+            alert(e instanceof Error ? e.message : "Erro ao excluir sorteio.");
+        } finally {
+            setProcessando(null);
+        }
+    }
+
     async function sortear(sorteio: Sorteio) {
         if (!confirm(`Sortear o vencedor de "${sorteio.titulo}"? Essa ação não pode ser desfeita.`))
             return;
@@ -102,9 +119,23 @@ export default function Sorteios() {
                     <div key={sorteio.id} className={`sorteio-card status-${sorteio.status}`}>
                         <div className="sorteio-cabecalho">
                             <h3>{sorteio.titulo}</h3>
-                            <span className={`sorteio-status status-${sorteio.status}`}>
-                                {sorteio.status === "aberto" ? "Aberto" : "Encerrado"}
-                            </span>
+
+                            <div className="sorteio-cabecalho-direita">
+                                <span className={`sorteio-status status-${sorteio.status}`}>
+                                    {sorteio.status === "aberto" ? "Aberto" : "Encerrado"}
+                                </span>
+
+                                {isAdmin && (
+                                    <button
+                                        className="btnExcluirSorteio"
+                                        title="Excluir sorteio"
+                                        disabled={processando === sorteio.id}
+                                        onClick={() => excluir(sorteio)}
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {sorteio.descricao && (

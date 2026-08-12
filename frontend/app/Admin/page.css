@@ -1,0 +1,147 @@
+.containerAdmin {
+    width: 92%;
+    max-width: 1240px;
+    margin: 70px auto 40px;
+}
+
+.adminHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-bottom: 25px;
+}
+
+.adminBusca {
+    width: 280px;
+    max-width: 100%;
+
+    padding: 10px 14px;
+
+    border: 1px solid var(--color-border-strong);
+    border-radius: 8px;
+
+    background: var(--color-bg-alt);
+    color: var(--color-text);
+
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+.adminBusca:focus {
+    border-color: var(--color-accent);
+}
+
+.adminVazio {
+    color: var(--color-text-muted);
+    padding: 40px 0;
+    text-align: center;
+}
+
+.lista-usuarios-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.usuario-admin-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 14px 18px;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    transition: border-color .15s, transform .15s;
+}
+
+.usuario-admin-card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-1px);
+}
+
+.usuario-admin-card img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    flex-shrink: 0;
+}
+
+.usuario-admin-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    min-width: 160px;
+}
+
+.usuario-admin-nome {
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.usuario-admin-steamid {
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.usuario-admin-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-left: auto;
+}
+
+.usuario-admin-badges span {
+    padding: 4px 12px;
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-coins {
+    background: rgba(255, 209, 102, .1);
+    color: var(--color-coin);
+}
+
+.badge-vip {
+    background: rgba(56, 189, 248, .14);
+    color: var(--color-info);
+}
+
+.badge-admin {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
+}
+
+@media (max-width: 640px) {
+    .adminHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .adminBusca {
+        width: 100%;
+    }
+
+    .usuario-admin-card {
+        flex-wrap: wrap;
+    }
+
+    .usuario-admin-badges {
+        margin-left: 0;
+        width: 100%;
+    }
+}

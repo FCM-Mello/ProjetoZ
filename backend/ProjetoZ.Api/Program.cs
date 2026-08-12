@@ -112,7 +112,6 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddHttpClient<SteamService>();
 builder.Services.AddHttpClient<MercadoPagoService>();
 
-builder.Services.AddSingleton<AdminsProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>
 {

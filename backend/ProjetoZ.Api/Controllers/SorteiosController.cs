@@ -212,4 +212,23 @@ public class SorteiosController : ControllerBase
 
         return Ok(new { vencedorUserId = ganhador.Id, vencedorNome = ganhador.Profile?.Name });
     }
+
+    [HttpDelete("{id}")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var sorteio = await _context.Sorteios.FindAsync(id);
+
+        if (sorteio == null)
+            return NotFound();
+
+        var participantes = _context.SorteioParticipantes.Where(p => p.SorteioId == id);
+
+        _context.SorteioParticipantes.RemoveRange(participantes);
+        _context.Sorteios.Remove(sorteio);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }

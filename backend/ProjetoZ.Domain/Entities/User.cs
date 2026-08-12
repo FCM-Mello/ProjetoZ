@@ -21,4 +21,6 @@ public class User
     public int VipNivel { get; set; } = 0;
 
     public DateTime? VipExpiraEm { get; set; }
+
+    public bool IsAdmin { get; set; } = false;
 }

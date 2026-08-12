@@ -1,0 +1,173 @@
+.admin-usuario-modal {
+    width: 560px;
+}
+
+.admin-modal-carregando {
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: 40px 0;
+}
+
+.admin-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin-modal-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--color-accent);
+}
+
+.admin-modal-nome {
+    font-size: 18px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.admin-modal-steamid {
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.admin-modal-erro {
+    padding: 10px 14px;
+    border-radius: 8px;
+
+    background: rgba(239, 68, 68, .14);
+    border: 1px solid rgba(239, 68, 68, .35);
+    color: var(--color-danger-strong);
+
+    font-size: 13px;
+}
+
+.admin-secao {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-border);
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-secao:last-of-type {
+    border-bottom: none;
+}
+
+.admin-secao h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--color-text-muted);
+}
+
+.admin-valor-atual {
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.admin-linha {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-linha input,
+.admin-linha select {
+    flex: 1;
+    min-width: 100px;
+
+    padding: 9px 10px;
+
+    border: 1px solid var(--color-border-strong);
+    border-radius: 8px;
+
+    background: var(--color-bg-alt);
+    color: var(--color-text);
+
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.admin-linha button {
+    padding: 9px 14px;
+
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    background: var(--color-accent);
+    color: #1a1004;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+
+    transition: background .15s;
+}
+
+.admin-linha button:hover:not(:disabled) {
+    background: var(--color-accent-strong);
+}
+
+.admin-linha button:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.admin-btn-perigo {
+    background: var(--color-danger) !important;
+    color: #2b0505 !important;
+}
+
+.admin-btn-perigo:hover:not(:disabled) {
+    background: var(--color-danger-strong) !important;
+}
+
+.admin-lista-vazia {
+    color: var(--color-text-muted);
+    font-size: 13px;
+}
+
+.admin-lista-inventario {
+    list-style: none;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-lista-inventario li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding: 8px 10px;
+
+    background: var(--color-bg-alt);
+    border-radius: 6px;
+
+    font-size: 13px;
+    color: var(--color-text);
+}
+
+.admin-lista-inventario li button {
+    padding: 5px 10px;
+    font-size: 11px;
+}
+
+@media (max-width: 640px) {
+    .admin-usuario-modal {
+        width: 100%;
+    }
+}

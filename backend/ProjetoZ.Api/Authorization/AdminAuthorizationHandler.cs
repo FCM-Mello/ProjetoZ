@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using ProjetoZ.Api.Services;
 using ProjetoZ.Persistence;
 using System.Security.Claims;
 
@@ -8,12 +7,10 @@ namespace ProjetoZ.Api.Authorization;
 public class AdminAuthorizationHandler : AuthorizationHandler<AdminRequirement>
 {
     private readonly ApplicationDbContext _context;
-    private readonly AdminsProvider _adminsProvider;
 
-    public AdminAuthorizationHandler(ApplicationDbContext context, AdminsProvider adminsProvider)
+    public AdminAuthorizationHandler(ApplicationDbContext context)
     {
         _context = context;
-        _adminsProvider = adminsProvider;
     }
 
     protected override async Task HandleRequirementAsync(
@@ -26,7 +23,7 @@ public class AdminAuthorizationHandler : AuthorizationHandler<AdminRequirement>
 
         var user = await _context.Users.FindAsync(id);
 
-        if (_adminsProvider.IsAdmin(user?.Profile?.SteamId))
+        if (user != null && user.IsAdmin)
         {
             context.Succeed(requirement);
         }

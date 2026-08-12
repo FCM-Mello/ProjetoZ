@@ -52,3 +52,15 @@ export async function sortearSorteio(id: string): Promise<{ vencedorUserId: stri
 
     return response.json();
 }
+
+export async function excluirSorteio(id: string) {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+        const mensagem = await response.text();
+        throw new Error(mensagem || "Erro ao excluir sorteio");
+    }
+}

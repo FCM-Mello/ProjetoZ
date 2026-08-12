@@ -23,6 +23,9 @@ export default function Header() {
                     <Link href="/Vip" className={linkClass("/Vip")}>VIP</Link>
                     <Link href="/Historico" className={linkClass("/Historico")}>HISTÓRICO</Link>
                     <Link href="/Sorteios" className={linkClass("/Sorteios")}>SORTEIOS</Link>
+                    {user?.isAdmin && (
+                        <Link href="/Admin" className={linkClass("/Admin")}>ADMIN</Link>
+                    )}
                 </nav>
 
             {!loading && !user && (
