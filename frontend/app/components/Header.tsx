@@ -1,3 +1,5 @@
+"use client";
+
 import "./Header.css"
 import Link from "next/link";
 import { usePathname } from "next/navigation";

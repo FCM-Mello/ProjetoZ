@@ -2,7 +2,8 @@ import Link from "next/link";
 import "./page.css";
 
 export const metadata = {
-    title: "Política de Privacidade — ArkZ",
+    title: "Política de Privacidade",
+    description: "Como o ArkZ coleta, usa e protege seus dados — perfil da Steam, compras, VIP e vínculo com o YouTube.",
 };
 
 export default function Privacidade() {

@@ -1,5 +1,4 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Rajdhani } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -11,6 +10,17 @@ const rajdhani = Rajdhani({
   weight: ["400", "500", "600", "700"],
   variable: "--font-game",
 });
+
+export const metadata: Metadata = {
+  title: {
+    default: "ArkZ",
+    template: "%s — ArkZ",
+  },
+  description: "ArkZ é a loja oficial de um servidor privado de DayZ: compre Az Coins, itens exclusivos e planos VIP, participe de sorteios e do ranking semanal de clipes.",
+  verification: {
+    google: "ViPt4D0ncZAuhp95aIxApbs-l8S-xUEei_twKrFklx4",
+  },
+};
 
 export default function RootLayout({
   children,
