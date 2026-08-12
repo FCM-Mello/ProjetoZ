@@ -38,3 +38,15 @@ export async function curtirClipe(id: string): Promise<{ curtidas: number }> {
 
     return response.json();
 }
+
+export async function excluirClipe(id: string) {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok) {
+        const mensagem = await response.text();
+        throw new Error(mensagem || "Erro ao excluir clipe");
+    }
+}

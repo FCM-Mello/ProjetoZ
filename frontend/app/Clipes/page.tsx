@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
-import { getClipes, criarClipe, curtirClipe } from "../services/clipesApi";
+import { getClipes, criarClipe, curtirClipe, excluirClipe } from "../services/clipesApi";
 import { vincularYoutube } from "../services/authApi";
 import Link from "next/link";
 import { Clipe, ClipeVencedor, CreateClipeRequest } from "../models/Clipe";
@@ -25,6 +25,7 @@ export default function Clipes() {
     const [proximoFechamento, setProximoFechamento] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [curtindo, setCurtindo] = useState<string | null>(null);
+    const [excluindo, setExcluindo] = useState<string | null>(null);
     const [mensagem, setMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
 
     useEffect(() => {
@@ -73,6 +74,22 @@ export default function Clipes() {
         }
     }
 
+    async function excluir(clipe: Clipe) {
+        if (!confirm(`Excluir o clipe "${clipe.titulo}"? Essa ação não pode ser desfeita.`))
+            return;
+
+        setExcluindo(clipe.id);
+
+        try {
+            await excluirClipe(clipe.id);
+            await carregar();
+        } catch (e) {
+            setMensagem({ tipo: "erro", texto: e instanceof Error ? e.message : "Erro ao excluir clipe." });
+        } finally {
+            setExcluindo(null);
+        }
+    }
+
     function formatarData(data: string) {
         return new Date(data).toLocaleDateString("pt-BR");
     }
@@ -90,6 +107,7 @@ export default function Clipes() {
     }
 
     const vinculado = !!user?.youtubeChannelNome;
+    const isAdmin = user?.isAdmin ?? false;
 
     return (
         <main className="containerClipes">
@@ -180,6 +198,17 @@ export default function Clipes() {
                             <div className="clipe-ranking">
                                 {index === 0 && clipe.curtidas > 0 ? "🏆" : `#${index + 1}`}
                             </div>
+
+                            {(clipe.autorSouEu || isAdmin) && (
+                                <button
+                                    className="btnExcluirClipe"
+                                    title="Excluir clipe"
+                                    disabled={excluindo === clipe.id}
+                                    onClick={() => excluir(clipe)}
+                                >
+                                    ✕
+                                </button>
+                            )}
 
                             <div className="clipe-player">
                                 {youtubeId ? (

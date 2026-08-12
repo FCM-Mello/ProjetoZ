@@ -178,6 +178,37 @@ public class ClipesController : ControllerBase
         return Ok(new { curtidas = total });
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var meuId = MeuId();
+
+        if (meuId == null)
+            return Unauthorized();
+
+        var clipe = await _context.Clipes.FindAsync(id);
+
+        if (clipe == null)
+            return NotFound();
+
+        if (clipe.UserId != meuId)
+        {
+            var usuario = await _context.Users.FindAsync(meuId.Value);
+
+            if (usuario == null || !usuario.IsAdmin)
+                return Forbid();
+        }
+
+        var curtidas = _context.ClipeCurtidas.Where(c => c.ClipeId == id);
+
+        _context.ClipeCurtidas.RemoveRange(curtidas);
+        _context.Clipes.Remove(clipe);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     private Guid? MeuId()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
