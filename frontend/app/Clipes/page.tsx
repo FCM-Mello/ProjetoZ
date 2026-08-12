@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { getClipes, criarClipe, curtirClipe } from "../services/clipesApi";
 import { vincularYoutube } from "../services/authApi";
+import Link from "next/link";
 import { Clipe, CreateClipeRequest } from "../models/Clipe";
 import ClipeModal from "./components/ClipeModal";
 import "./page.css";
@@ -100,9 +101,15 @@ export default function Clipes() {
                         Postar Clipe
                     </button>
                 ) : (
-                    <button className="btnVincularYoutube" onClick={vincularYoutube}>
-                        Vincular canal do YouTube
-                    </button>
+                    <div className="clipesVincularWrap">
+                        <button className="btnVincularYoutube" onClick={vincularYoutube}>
+                            Vincular canal do YouTube
+                        </button>
+                        <span className="clipesVincularAviso">
+                            Só lemos o ID do seu canal, pra confirmar dono do clipe. Veja nossa{" "}
+                            <Link href="/Privacidade">Política de Privacidade</Link>.
+                        </span>
+                    </div>
                 )}
             </div>
 

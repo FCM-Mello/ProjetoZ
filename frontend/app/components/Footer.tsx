@@ -1,9 +1,11 @@
+import Link from "next/link";
 import "./Footer.css";
 
 export default function Footer() {
     return (
         <footer className="footer">
-            © {new Date().getFullYear()} ArkZ
+            <span>© {new Date().getFullYear()} ArkZ</span>
+            <Link href="/Privacidade" className="footerLink">Política de Privacidade</Link>
         </footer>
     );
 }

@@ -1,0 +1,74 @@
+.containerPrivacidade {
+    width: 92%;
+    max-width: 860px;
+    margin: 70px auto 60px;
+}
+
+.privacidadeAtualizado {
+    color: var(--color-text-muted);
+    font-size: 12px;
+    margin-bottom: 30px;
+}
+
+.containerPrivacidade section {
+    margin-bottom: 28px;
+}
+
+.containerPrivacidade h3 {
+    color: var(--color-text);
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 10px;
+
+    padding-left: 10px;
+    border-left: 3px solid var(--color-accent);
+}
+
+.containerPrivacidade p {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.containerPrivacidade ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding-left: 20px;
+}
+
+.containerPrivacidade li {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.containerPrivacidade li strong {
+    color: var(--color-text);
+}
+
+.containerPrivacidade code {
+    background: var(--color-surface-alt);
+    color: var(--color-accent-strong);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.containerPrivacidade a {
+    color: var(--color-accent-strong);
+}
+
+.privacidadeVoltar {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.privacidadeVoltar:hover {
+    color: var(--color-accent-strong);
+}
