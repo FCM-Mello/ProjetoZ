@@ -23,4 +23,10 @@ public class User
     public DateTime? VipExpiraEm { get; set; }
 
     public bool IsAdmin { get; set; } = false;
+
+    // Canal do YouTube vinculado via OAuth do Google — usado pra validar
+    // que um clipe postado no ranking semanal realmente pertence ao usuário.
+    public string? YoutubeChannelId { get; set; }
+
+    public string? YoutubeChannelNome { get; set; }
 }

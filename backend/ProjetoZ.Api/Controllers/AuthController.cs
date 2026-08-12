@@ -18,17 +18,20 @@ namespace ProjetoZ.Api.Controllers
         private readonly ApplicationDbContext _context;
         private readonly SteamService _steamService;
         private readonly JwtService _jwtService;
+        private readonly YoutubeService _youtubeService;
         private readonly IConfiguration _configuration;
 
         public AuthController(
             ApplicationDbContext context,
             SteamService steamService,
             JwtService jwtService,
+            YoutubeService youtubeService,
             IConfiguration configuration)
         {
             _context = context;
             _steamService = steamService;
             _jwtService = jwtService;
+            _youtubeService = youtubeService;
             _configuration = configuration;
         }
 
@@ -135,8 +138,73 @@ namespace ProjetoZ.Api.Controllers
                 IsAdmin = user.IsAdmin,
                 VipNivel = vipNivel,
                 VipNivelNome = vipNivel > 0 ? VipTiers.NomeDoNivel(vipNivel) : null,
-                VipExpiraEm = vipNivel > 0 ? user.VipExpiraEm : null
+                VipExpiraEm = vipNivel > 0 ? user.VipExpiraEm : null,
+                YoutubeChannelNome = user.YoutubeChannelNome
             });
+        }
+
+        // A vinculação do YouTube é uma navegação de página inteira (não um
+        // fetch), então o token do ArkZ chega por query string em vez do
+        // header Authorization — ele é validado manualmente aqui e guardado
+        // nas AuthenticationProperties pra sobreviver ao vai-e-volta do OAuth
+        // do Google.
+        [AllowAnonymous]
+        [HttpGet("youtube/vincular")]
+        public IActionResult VincularYoutube([FromQuery] string token)
+        {
+            var userId = _jwtService.ValidarEExtrairUserId(token);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = "/api/auth/youtube/callback"
+            };
+
+            properties.Items["arkzUserId"] = userId.Value.ToString();
+
+            return Challenge(properties, "Google");
+        }
+
+        [AllowAnonymous]
+        [HttpGet("youtube/callback")]
+        public async Task<IActionResult> YoutubeCallback()
+        {
+            var frontendUrl = _configuration["App:FrontendUrl"]
+                ?? throw new InvalidOperationException("App:FrontendUrl não configurado.");
+
+            var result = await HttpContext.AuthenticateAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded || result.Properties == null)
+                return Redirect($"{frontendUrl}/Clipes?youtube=erro");
+
+            if (!result.Properties.Items.TryGetValue("arkzUserId", out var arkzUserId) ||
+                arkzUserId == null ||
+                !Guid.TryParse(arkzUserId, out var userId))
+                return Redirect($"{frontendUrl}/Clipes?youtube=erro");
+
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                return Redirect($"{frontendUrl}/Clipes?youtube=erro");
+
+            var accessToken = result.Properties.GetTokenValue("access_token");
+
+            var canal = accessToken != null
+                ? await _youtubeService.ObterCanalAsync(accessToken)
+                : null;
+
+            if (canal == null)
+                return Redirect($"{frontendUrl}/Clipes?youtube=erro");
+
+            user.YoutubeChannelId = canal.Value.Id;
+            user.YoutubeChannelNome = canal.Value.Nome;
+
+            await _context.SaveChangesAsync();
+
+            return Redirect($"{frontendUrl}/Clipes?youtube=vinculado");
         }
 
         [HttpPost("logout")]

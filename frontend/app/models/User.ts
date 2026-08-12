@@ -10,4 +10,5 @@ export interface User {
     vipNivel: number;
     vipNivelNome: string | null;
     vipExpiraEm: string | null;
+    youtubeChannelNome: string | null;
 }

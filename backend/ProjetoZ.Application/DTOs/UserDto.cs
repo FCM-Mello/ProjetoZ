@@ -25,5 +25,7 @@ namespace ProjetoZ.Application.DTOs
         public string? VipNivelNome { get; set; }
 
         public DateTime? VipExpiraEm { get; set; }
+
+        public string? YoutubeChannelNome { get; set; }
     }
 }

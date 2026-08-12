@@ -4,6 +4,11 @@ export function loginSteam() {
     window.location.href = `${API_URL}/auth/steam/login`;
 }
 
+export function vincularYoutube() {
+    const token = localStorage.getItem("token");
+    window.location.href = `${API_URL}/auth/youtube/vincular?token=${encodeURIComponent(token ?? "")}`;
+}
+
 export async function getCurrentUser(token: string) {
     const response = await fetch(`${API_URL}/auth/me`, {
         headers: {

@@ -1,0 +1,250 @@
+.containerClipes {
+    width: 92%;
+    max-width: 1240px;
+    margin: 70px auto 40px;
+}
+
+.clipesHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+
+    margin-bottom: 16px;
+}
+
+.clipesSubtitulo {
+    color: var(--color-text-muted);
+    font-size: 14px;
+
+    margin-top: 8px;
+    max-width: 560px;
+}
+
+.clipesSubtitulo strong {
+    color: var(--color-coin);
+}
+
+.clipesCanalVinculado {
+    color: var(--color-text-muted);
+    font-size: 13px;
+
+    margin-bottom: 20px;
+}
+
+.clipesCanalVinculado strong {
+    color: var(--color-text);
+}
+
+.btnPostarClipe,
+.btnVincularYoutube {
+    flex-shrink: 0;
+
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+    font-size: 13px;
+
+    transition: .2s;
+}
+
+.btnPostarClipe {
+    background: var(--color-accent);
+    color: #1a1004;
+}
+
+.btnPostarClipe:hover {
+    background: var(--color-accent-strong);
+}
+
+.btnVincularYoutube {
+    background: var(--color-danger);
+    color: #2b0505;
+}
+
+.btnVincularYoutube:hover {
+    background: var(--color-danger-strong);
+}
+
+.clipesAviso {
+    padding: 12px 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.clipesAviso-sucesso {
+    background: rgba(34, 197, 94, .14);
+    border: 1px solid rgba(34, 197, 94, .35);
+    color: var(--color-success-strong);
+}
+
+.clipesAviso-erro {
+    background: rgba(239, 68, 68, .14);
+    border: 1px solid rgba(239, 68, 68, .35);
+    color: var(--color-danger-strong);
+}
+
+.clipesVazio {
+    color: var(--color-text-muted);
+    padding: 40px 0;
+    text-align: center;
+}
+
+.lista-clipes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.clipe-card {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    padding: 16px;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+}
+
+.clipe-lider {
+    border-color: var(--color-coin);
+    box-shadow: 0 0 0 1px rgba(255, 209, 102, .3);
+}
+
+.clipe-ranking {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+
+    padding: 3px 10px;
+
+    border-radius: 20px;
+
+    background: rgba(10, 12, 16, .75);
+    color: var(--color-coin);
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.clipe-player {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 16 / 9;
+
+    border-radius: 8px;
+    overflow: hidden;
+
+    background: var(--color-bg-alt);
+}
+
+.clipe-player iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.clipe-link-externo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    color: var(--color-accent-strong);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.clipe-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.clipe-titulo {
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.clipe-autor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.clipe-autor img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.clipe-autor span {
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+.btnCurtir {
+    align-self: flex-start;
+
+    padding: 8px 16px;
+
+    border: 1px solid var(--color-border-strong);
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition: .15s;
+}
+
+.btnCurtir:hover:not(:disabled) {
+    border-color: var(--color-accent);
+}
+
+.btnCurtir-ativo {
+    border-color: var(--color-danger);
+    background: rgba(239, 68, 68, .1);
+}
+
+.btnCurtir:disabled {
+    opacity: .7;
+    cursor: default;
+}
+
+@media (max-width: 640px) {
+    .clipesHeader {
+        flex-direction: column;
+    }
+
+    .btnPostarClipe,
+    .btnVincularYoutube {
+        width: 100%;
+    }
+
+    .lista-clipes {
+        grid-template-columns: 1fr;
+    }
+}

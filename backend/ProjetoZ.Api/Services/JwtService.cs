@@ -38,4 +38,38 @@ public class JwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    // Usado no fluxo de vínculo com o YouTube: como é uma navegação de
+    // página inteira (não um fetch), o token vem por query string em vez
+    // do header Authorization, então precisamos validar ele manualmente.
+    public Guid? ValidarEExtrairUserId(string token)
+    {
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+
+        var parameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = _configuration["Jwt:Issuer"],
+            ValidAudience = _configuration["Jwt:Audience"],
+
+            IssuerSigningKey = key
+        };
+
+        try
+        {
+            var principal = new JwtSecurityTokenHandler().ValidateToken(token, parameters, out _);
+            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return userId != null && Guid.TryParse(userId, out var id) ? id : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

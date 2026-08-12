@@ -94,6 +94,15 @@ builder.Services
         options.CallbackPath = "/signin-steam";
         options.CorrelationCookie.SameSite = SameSiteMode.Lax;
         options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None;
+    }).AddGoogle("Google", options =>
+    {
+        options.ClientId = builder.Configuration["Google:ClientId"] ?? "";
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? "";
+        options.CallbackPath = "/signin-google";
+        options.SaveTokens = true;
+        options.Scope.Add("https://www.googleapis.com/auth/youtube.readonly");
+        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.None;
     });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
@@ -111,6 +120,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddHttpClient<SteamService>();
 builder.Services.AddHttpClient<MercadoPagoService>();
+builder.Services.AddHttpClient<YoutubeService>();
+
+builder.Services.AddHostedService<FechamentoSemanalClipesService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>

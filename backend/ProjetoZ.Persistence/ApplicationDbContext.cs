@@ -31,4 +31,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Sorteio> Sorteios => Set<Sorteio>();
 
     public DbSet<SorteioParticipante> SorteioParticipantes => Set<SorteioParticipante>();
+
+    public DbSet<Clipe> Clipes => Set<Clipe>();
+
+    public DbSet<ClipeCurtida> ClipeCurtidas => Set<ClipeCurtida>();
+
+    public DbSet<ClipeConfig> ClipeConfigs => Set<ClipeConfig>();
 }

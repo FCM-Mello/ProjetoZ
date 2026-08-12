@@ -82,6 +82,11 @@
     color: var(--color-text-muted);
 }
 
+.tipo-clipe {
+    background: rgba(255, 159, 28, .16);
+    color: var(--color-accent-strong);
+}
+
 .compra-info {
     flex: 1;
     min-width: 0;

@@ -6,6 +6,15 @@ import { useRequireAuth } from "../hooks/useRequireAuth";
 import { Compra } from "../models/Compra";
 import "./page.css";
 
+const ROTULOS_TIPO: Record<Compra["tipo"], string> = {
+    produto: "Produto",
+    coins: "Coins",
+    sorteio: "Sorteio",
+    vip: "VIP",
+    mod: "In-game",
+    clipe: "Clipe da Semana",
+};
+
 export default function Historico() {
     useRequireAuth();
 
@@ -49,7 +58,7 @@ export default function Historico() {
                 {compras.map(compra => (
                     <div key={compra.id} className="compra-item">
                         <span className={`compra-tipo tipo-${compra.tipo}`}>
-                            {compra.tipo === "produto" ? "Produto" : compra.tipo === "coins" ? "Coins" : compra.tipo === "vip" ? "VIP" : compra.tipo === "mod" ? "In-game" : "Sorteio"}
+                            {ROTULOS_TIPO[compra.tipo]}
                         </span>
 
                         <div className="compra-info">
@@ -81,6 +90,10 @@ export default function Historico() {
 
                             {compra.tipo === "mod" && (
                                 <span className="compra-coins negativo">-🪙 {compra.coins}</span>
+                            )}
+
+                            {compra.tipo === "clipe" && (
+                                <span className="compra-coins positivo">🏆 +🪙 {compra.coins}</span>
                             )}
                         </div>
                     </div>
