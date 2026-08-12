@@ -17,7 +17,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 90px;
+    margin-bottom: 24px;
 }
 
 .landingLista li {
@@ -25,12 +25,40 @@
     font-size: 14px;
 }
 
+.landingDados {
+    max-width: 560px;
+
+    padding: 14px 16px;
+
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    color: var(--color-text-muted);
+    font-size: 13px;
+    line-height: 1.6;
+
+    margin-bottom: 90px;
+}
+
+.landingDados code {
+    background: var(--color-surface-alt);
+    color: var(--color-accent-strong);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.landingDados a {
+    color: var(--color-accent-strong);
+}
+
 @media (max-width: 640px) {
     .landingTitulo {
         font-size: 30px;
     }
 
-    .landingLista {
+    .landingDados {
         margin-bottom: 110px;
     }
 }

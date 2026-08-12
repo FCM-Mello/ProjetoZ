@@ -19,6 +19,14 @@ export default function Home() {
         <li>🎬 Ranking semanal de clipes, com premiação em Az Coins</li>
       </ul>
 
+      <p className="landingDados">
+        Pra participar do ranking de clipes, pedimos acesso somente-leitura à sua conta do
+        Google (escopo <code>youtube.readonly</code>), usado só pra confirmar que o vídeo
+        postado é do seu próprio canal do YouTube — não lemos, alteramos nem publicamos nada
+        na sua conta. Veja todos os detalhes na nossa{" "}
+        <Link href="/Privacidade">Política de Privacidade</Link>.
+      </p>
+
       <Link href="/Home" className="buttonConfirm">Entrar na loja</Link>
     </div>
   );
