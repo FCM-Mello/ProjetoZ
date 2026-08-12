@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { getClipes, criarClipe, curtirClipe, excluirClipe } from "../services/clipesApi";
-import { vincularYoutube } from "../services/authApi";
+import { vincularYoutube, desvincularYoutube } from "../services/authApi";
 import Link from "next/link";
 import { Clipe, ClipeVencedor, CreateClipeRequest } from "../models/Clipe";
 import ClipeModal from "./components/ClipeModal";
@@ -26,6 +26,7 @@ export default function Clipes() {
     const [showModal, setShowModal] = useState(false);
     const [curtindo, setCurtindo] = useState<string | null>(null);
     const [excluindo, setExcluindo] = useState<string | null>(null);
+    const [desvinculando, setDesvinculando] = useState(false);
     const [mensagem, setMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
 
     useEffect(() => {
@@ -90,6 +91,22 @@ export default function Clipes() {
         }
     }
 
+    async function desvincular() {
+        if (!confirm("Desvincular seu canal do YouTube? Você vai precisar vincular de novo pra postar clipes."))
+            return;
+
+        setDesvinculando(true);
+
+        try {
+            await desvincularYoutube();
+            await refreshUser();
+        } catch (e) {
+            setMensagem({ tipo: "erro", texto: e instanceof Error ? e.message : "Erro ao desvincular." });
+        } finally {
+            setDesvinculando(false);
+        }
+    }
+
     function formatarData(data: string) {
         return new Date(data).toLocaleDateString("pt-BR");
     }
@@ -138,7 +155,12 @@ export default function Clipes() {
             </div>
 
             {vinculado && (
-                <p className="clipesCanalVinculado">Canal vinculado: <strong>{user!.youtubeChannelNome}</strong></p>
+                <p className="clipesCanalVinculado">
+                    Canal vinculado: <strong>{user!.youtubeChannelNome}</strong>
+                    <button className="btnDesvincularYoutube" disabled={desvinculando} onClick={desvincular}>
+                        {desvinculando ? "Desvinculando..." : "Desvincular"}
+                    </button>
+                </p>
             )}
 
             {mensagem && (

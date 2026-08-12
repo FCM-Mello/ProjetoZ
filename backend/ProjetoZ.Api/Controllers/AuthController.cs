@@ -207,6 +207,28 @@ namespace ProjetoZ.Api.Controllers
             return Redirect($"{frontendUrl}/Clipes?youtube=vinculado");
         }
 
+        [Authorize]
+        [HttpDelete("youtube/vincular")]
+        public async Task<IActionResult> DesvincularYoutube()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var user = await _context.Users.FindAsync(Guid.Parse(userId));
+
+            if (user == null)
+                return Unauthorized();
+
+            user.YoutubeChannelId = null;
+            user.YoutubeChannelNome = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
