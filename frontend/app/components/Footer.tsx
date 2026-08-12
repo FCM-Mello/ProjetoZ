@@ -6,6 +6,7 @@ export default function Footer() {
         <footer className="footer">
             <span>© {new Date().getFullYear()} ArkZ</span>
             <Link href="/Privacidade" className="footerLink">Política de Privacidade</Link>
+            <Link href="/Termos" className="footerLink">Termos de Serviço</Link>
         </footer>
     );
 }

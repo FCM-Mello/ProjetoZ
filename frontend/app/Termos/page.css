@@ -1,0 +1,48 @@
+.containerTermos {
+    width: 92%;
+    max-width: 860px;
+    margin: 70px auto 60px;
+}
+
+.termosAtualizado {
+    color: var(--color-text-muted);
+    font-size: 12px;
+    margin-bottom: 30px;
+}
+
+.containerTermos section {
+    margin-bottom: 28px;
+}
+
+.containerTermos h3 {
+    color: var(--color-text);
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 10px;
+
+    padding-left: 10px;
+    border-left: 3px solid var(--color-accent);
+}
+
+.containerTermos p {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.containerTermos a {
+    color: var(--color-accent-strong);
+}
+
+.termosVoltar {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.termosVoltar:hover {
+    color: var(--color-accent-strong);
+}
