@@ -56,6 +56,10 @@ export default function ClipeModal({ onClose, onSave }: Props) {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                     />
+                    <span className="modal-dica">
+                        O vídeo precisa ser do seu canal vinculado, publicado durante a semana atual, e ter
+                        "ArkZ" no título dele lá no YouTube.
+                    </span>
                 </div>
 
                 <div className="modal-buttons">

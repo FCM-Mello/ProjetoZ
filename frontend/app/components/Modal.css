@@ -63,6 +63,12 @@
     letter-spacing:.04em;
 }
 
+.modal-dica{
+    color: var(--color-text-muted);
+    font-size:11px;
+    line-height:1.5;
+}
+
 .modal-row{
     display:flex;
     gap:15px;

@@ -125,6 +125,9 @@ public class ClipesController : ControllerBase
         if (infoVideo.Value.PublicadoEm < Semana.InicioSemanaAtualUtc())
             return BadRequest("Esse vídeo é de antes do início da semana atual — só valem clipes publicados durante a semana do ranking.");
 
+        if (!infoVideo.Value.Titulo.Contains("arkz", StringComparison.OrdinalIgnoreCase))
+            return BadRequest("O título do vídeo no YouTube precisa mencionar \"ArkZ\".");
+
         var clipe = new Clipe
         {
             Id = Guid.NewGuid(),

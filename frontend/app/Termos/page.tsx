@@ -73,8 +73,9 @@ export default function Termos() {
                 <h3>7. Ranking semanal de clipes</h3>
                 <p>
                     Só é permitido postar vídeos do seu próprio canal do YouTube, verificado via vínculo com
-                    sua conta Google. Curtir o próprio clipe não é permitido. Ao final da semana, o autor do
-                    clipe mais curtido recebe 500 Az Coins automaticamente (empates são resolvidos por
+                    sua conta Google, publicados durante a semana atual do ranking e com "ArkZ" mencionado
+                    no título do vídeo. Curtir o próprio clipe não é permitido. Ao final da semana, o autor
+                    do clipe mais curtido recebe 500 Az Coins automaticamente (empates são resolvidos por
                     sorteio entre os empatados); todos os clipes e curtidas da semana são apagados em
                     seguida. Reservamo-nos o direito de remover clipes ou desqualificar participantes em
                     caso de conteúdo ofensivo, fraude de curtidas ou vídeo que não pertença ao participante.

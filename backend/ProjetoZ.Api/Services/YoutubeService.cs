@@ -41,9 +41,10 @@ public class YoutubeService
     }
 
     // Usa a chave de API do servidor (dados públicos, não precisa do token
-    // de ninguém) pra descobrir de qual canal um vídeo específico é e
-    // quando ele foi publicado (pra impedir postar clipe antigo).
-    public async Task<(string ChannelId, DateTime PublicadoEm)?> ObterInfoDoVideoAsync(string videoId)
+    // de ninguém) pra descobrir de qual canal um vídeo específico é, quando
+    // foi publicado (pra impedir postar clipe antigo) e o título (pra exigir
+    // menção ao ArkZ).
+    public async Task<(string ChannelId, DateTime PublicadoEm, string Titulo)?> ObterInfoDoVideoAsync(string videoId)
     {
         var apiKey = _configuration["Google:YoutubeApiKey"];
 
@@ -65,11 +66,12 @@ public class YoutubeService
         var snippet = items[0].GetProperty("snippet");
         var channelId = snippet.GetProperty("channelId").GetString();
         var publicadoEm = snippet.GetProperty("publishedAt").GetDateTime();
+        var titulo = snippet.GetProperty("title").GetString() ?? "";
 
         if (channelId == null)
             return null;
 
-        return (channelId, publicadoEm);
+        return (channelId, publicadoEm, titulo);
     }
 
     public static string? ExtrairVideoId(string url)
