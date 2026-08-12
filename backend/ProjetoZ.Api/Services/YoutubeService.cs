@@ -41,8 +41,9 @@ public class YoutubeService
     }
 
     // Usa a chave de API do servidor (dados públicos, não precisa do token
-    // de ninguém) pra descobrir de qual canal um vídeo específico é.
-    public async Task<string?> ObterChannelIdDoVideoAsync(string videoId)
+    // de ninguém) pra descobrir de qual canal um vídeo específico é e
+    // quando ele foi publicado (pra impedir postar clipe antigo).
+    public async Task<(string ChannelId, DateTime PublicadoEm)?> ObterInfoDoVideoAsync(string videoId)
     {
         var apiKey = _configuration["Google:YoutubeApiKey"];
 
@@ -61,7 +62,14 @@ public class YoutubeService
         if (items.GetArrayLength() == 0)
             return null;
 
-        return items[0].GetProperty("snippet").GetProperty("channelId").GetString();
+        var snippet = items[0].GetProperty("snippet");
+        var channelId = snippet.GetProperty("channelId").GetString();
+        var publicadoEm = snippet.GetProperty("publishedAt").GetDateTime();
+
+        if (channelId == null)
+            return null;
+
+        return (channelId, publicadoEm);
     }
 
     public static string? ExtrairVideoId(string url)

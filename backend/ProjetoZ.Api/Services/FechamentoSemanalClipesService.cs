@@ -102,6 +102,13 @@ public class FechamentoSemanalClipesService : BackgroundService
                             : $"Clipe da semana: {vencedor.MelhorClipe.Titulo}",
                         Coins = 500,
                     });
+
+                    config.UltimoVencedorTitulo = vencedor.MelhorClipe.Titulo;
+                    config.UltimoVencedorUrl = vencedor.MelhorClipe.Url;
+                    config.UltimoVencedorAutorNome = usuarioVencedor.Profile?.Name ?? "Usuário";
+                    config.UltimoVencedorAutorAvatar = usuarioVencedor.Profile?.Avatar ?? "";
+                    config.UltimoVencedorCurtidas = maiorPontuacao;
+                    config.UltimoVencedorFechadoEm = DateTime.UtcNow;
                 }
             }
 

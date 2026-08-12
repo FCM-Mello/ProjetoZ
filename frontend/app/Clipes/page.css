@@ -119,6 +119,72 @@
     text-align: center;
 }
 
+.vencedorAnterior {
+    position: relative;
+
+    padding: 20px;
+
+    margin-bottom: 28px;
+
+    background:
+        radial-gradient(circle at 0% 0%, rgba(255, 209, 102, .12), transparent 55%),
+        var(--color-surface);
+
+    border: 1px solid var(--color-coin);
+    border-radius: 12px;
+
+    box-shadow: 0 0 0 1px rgba(255, 209, 102, .2);
+}
+
+.vencedorAnteriorSelo {
+    display: inline-block;
+
+    padding: 4px 14px;
+
+    border-radius: 20px;
+
+    background: rgba(255, 209, 102, .16);
+    color: var(--color-coin);
+
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+
+    margin-bottom: 14px;
+}
+
+.vencedorAnteriorConteudo {
+    display: flex;
+    gap: 20px;
+}
+
+.vencedorAnteriorPlayer {
+    flex: 0 0 260px;
+}
+
+.vencedorAnteriorInfo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.vencedorAnteriorDetalhe {
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+@media (max-width: 640px) {
+    .vencedorAnteriorConteudo {
+        flex-direction: column;
+    }
+
+    .vencedorAnteriorPlayer {
+        flex-basis: auto;
+    }
+}
+
 .lista-clipes {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));

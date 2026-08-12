@@ -65,10 +65,28 @@ public class ClipesController : ControllerBase
             .ThenByDescending(c => c.CriadoEm)
             .ToList();
 
+        var config = await _context.ClipeConfigs.FirstOrDefaultAsync();
+
+        ClipeVencedorDto? ultimoVencedor = null;
+
+        if (config?.UltimoVencedorTitulo != null)
+        {
+            ultimoVencedor = new ClipeVencedorDto
+            {
+                Titulo = config.UltimoVencedorTitulo,
+                Url = config.UltimoVencedorUrl ?? "",
+                AutorNome = config.UltimoVencedorAutorNome ?? "Usuário",
+                AutorAvatar = config.UltimoVencedorAutorAvatar ?? "",
+                Curtidas = config.UltimoVencedorCurtidas ?? 0,
+                FechadoEm = config.UltimoVencedorFechadoEm ?? config.UltimoFechamento
+            };
+        }
+
         return Ok(new ClipesResponseDto
         {
             ProximoFechamento = Semana.ProximoFechamentoUtc(),
-            Clipes = dtos
+            Clipes = dtos,
+            UltimoVencedor = ultimoVencedor
         });
     }
 
@@ -96,13 +114,16 @@ public class ClipesController : ControllerBase
         if (videoId == null)
             return BadRequest("Informe um link válido de vídeo do YouTube.");
 
-        var channelIdDoVideo = await _youtubeService.ObterChannelIdDoVideoAsync(videoId);
+        var infoVideo = await _youtubeService.ObterInfoDoVideoAsync(videoId);
 
-        if (channelIdDoVideo == null)
+        if (infoVideo == null)
             return BadRequest("Não foi possível encontrar esse vídeo no YouTube.");
 
-        if (channelIdDoVideo != usuario.YoutubeChannelId)
+        if (infoVideo.Value.ChannelId != usuario.YoutubeChannelId)
             return BadRequest("Esse vídeo não pertence ao canal do YouTube vinculado à sua conta.");
+
+        if (infoVideo.Value.PublicadoEm < Semana.InicioSemanaAtualUtc())
+            return BadRequest("Esse vídeo é de antes do início da semana atual — só valem clipes publicados durante a semana do ranking.");
 
         var clipe = new Clipe
         {

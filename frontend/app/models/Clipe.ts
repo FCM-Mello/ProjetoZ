@@ -10,9 +10,19 @@ export interface Clipe {
     criadoEm: string;
 }
 
+export interface ClipeVencedor {
+    titulo: string;
+    url: string;
+    autorNome: string;
+    autorAvatar: string;
+    curtidas: number;
+    fechadoEm: string;
+}
+
 export interface ClipesResponse {
     proximoFechamento: string;
     clipes: Clipe[];
+    ultimoVencedor: ClipeVencedor | null;
 }
 
 export interface CreateClipeRequest {

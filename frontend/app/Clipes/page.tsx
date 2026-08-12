@@ -6,7 +6,7 @@ import { useRequireAuth } from "../hooks/useRequireAuth";
 import { getClipes, criarClipe, curtirClipe } from "../services/clipesApi";
 import { vincularYoutube } from "../services/authApi";
 import Link from "next/link";
-import { Clipe, CreateClipeRequest } from "../models/Clipe";
+import { Clipe, ClipeVencedor, CreateClipeRequest } from "../models/Clipe";
 import ClipeModal from "./components/ClipeModal";
 import "./page.css";
 
@@ -21,6 +21,7 @@ export default function Clipes() {
     const { user, refreshUser } = useAuth();
 
     const [clipes, setClipes] = useState<Clipe[]>([]);
+    const [ultimoVencedor, setUltimoVencedor] = useState<ClipeVencedor | null>(null);
     const [proximoFechamento, setProximoFechamento] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [curtindo, setCurtindo] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export default function Clipes() {
             const dados = await getClipes();
             setClipes(dados.clipes);
             setProximoFechamento(dados.proximoFechamento);
+            setUltimoVencedor(dados.ultimoVencedor);
         } catch (e) {
             console.error(e);
         }
@@ -69,6 +71,10 @@ export default function Clipes() {
         } finally {
             setCurtindo(null);
         }
+    }
+
+    function formatarData(data: string) {
+        return new Date(data).toLocaleDateString("pt-BR");
     }
 
     function formatarPrazo(data: string) {
@@ -120,6 +126,44 @@ export default function Clipes() {
             {mensagem && (
                 <div className={`clipesAviso clipesAviso-${mensagem.tipo}`}>
                     {mensagem.texto}
+                </div>
+            )}
+
+            {ultimoVencedor && (
+                <div className="vencedorAnterior">
+                    <div className="vencedorAnteriorSelo">🏆 Vencedor da semana passada</div>
+
+                    <div className="vencedorAnteriorConteudo">
+                        <div className="clipe-player vencedorAnteriorPlayer">
+                            {(() => {
+                                const youtubeId = extrairYoutubeId(ultimoVencedor.url);
+                                return youtubeId ? (
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${youtubeId}`}
+                                        title={ultimoVencedor.titulo}
+                                        allowFullScreen
+                                    />
+                                ) : (
+                                    <a className="clipe-link-externo" href={ultimoVencedor.url} target="_blank" rel="noreferrer">
+                                        Assistir clipe ↗
+                                    </a>
+                                );
+                            })()}
+                        </div>
+
+                        <div className="vencedorAnteriorInfo">
+                            <span className="clipe-titulo">{ultimoVencedor.titulo}</span>
+
+                            <div className="clipe-autor">
+                                {ultimoVencedor.autorAvatar && <img src={ultimoVencedor.autorAvatar} alt={ultimoVencedor.autorNome} />}
+                                <span>{ultimoVencedor.autorNome}</span>
+                            </div>
+
+                            <span className="vencedorAnteriorDetalhe">
+                                🤍 {ultimoVencedor.curtidas} curtidas · encerrado em {formatarData(ultimoVencedor.fechadoEm)}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             )}
 
