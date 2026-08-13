@@ -116,6 +116,27 @@ public class GameController : ControllerBase
         return Ok(new { coins = user.Coins });
     }
 
+    // Lista SteamId + nível de todo jogador com VipNivel diferente de 0 —
+    // útil pro mod sincronizar benefícios em lote em vez de consultar
+    // jogador por jogador. Não filtra por expiração: reflete o campo bruto.
+    [HttpPost("vips")]
+    public async Task<IActionResult> GetVips(ListaVipsRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        var vips = await _context.Users
+            .Where(u => u.Profile != null && u.Profile.SteamId != null && u.VipNivel != 0)
+            .Select(u => new PlayerVipDto
+            {
+                SteamId = u.Profile!.SteamId!,
+                VipNivel = u.VipNivel
+            })
+            .ToListAsync();
+
+        return Ok(vips);
+    }
+
     private bool ValidarApiKey(string? providedKey)
     {
         var apiKey = _configuration["GameServer:ApiKey"];

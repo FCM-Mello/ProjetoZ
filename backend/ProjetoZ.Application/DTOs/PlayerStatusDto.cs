@@ -25,4 +25,11 @@ namespace ProjetoZ.Application.DTOs
 
         public int Quantidade { get; set; }
     }
+
+    public class PlayerVipDto
+    {
+        public string SteamId { get; set; } = string.Empty;
+
+        public int VipNivel { get; set; }
+    }
 }
