@@ -10,6 +10,6 @@ namespace ProjetoZ.Domain.Entities
     {
         public Guid Id { get; set; }
 
-        public string Nome { get; set; }
+        public string Nome { get; set; } = string.Empty;
     }
 }

@@ -54,12 +54,17 @@ public class VipController : ControllerBase
 
         var preco = VipTiers.Precos[nivel];
 
-        if (user.Coins < preco)
+        var linhasAfetadas = await _context.Users
+            .Where(u => u.Id == user.Id && u.Coins >= preco)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.Coins, u => u.Coins - preco));
+
+        if (linhasAfetadas == 0)
             return BadRequest("Saldo de Az Coins insuficiente.");
 
-        user.Coins -= preco;
+        var expiraEm = DateTime.UtcNow.AddDays(VipTiers.DuracaoDias);
+
         user.VipNivel = nivel;
-        user.VipExpiraEm = DateTime.UtcNow.AddDays(VipTiers.DuracaoDias);
+        user.VipExpiraEm = expiraEm;
 
         _context.Compras.Add(new Compra
         {
@@ -74,10 +79,10 @@ public class VipController : ControllerBase
 
         return Ok(new
         {
-            coins = user.Coins,
-            vipNivel = user.VipNivel,
-            vipNivelNome = VipTiers.NomeDoNivel(user.VipNivel),
-            vipExpiraEm = user.VipExpiraEm
+            coins = user.Coins - preco,
+            vipNivel = nivel,
+            vipNivelNome = VipTiers.NomeDoNivel(nivel),
+            vipExpiraEm = expiraEm
         });
     }
 }

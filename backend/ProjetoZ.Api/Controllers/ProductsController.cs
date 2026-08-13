@@ -19,15 +19,6 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
-    [HttpPost]
-    [Route("/api/productsPost")]
-    public async Task<IActionResult> GetAll([FromBody] string token)
-    {
-        var products = await _context.Products.ToListAsync();
-
-        return Ok(products);
-    }
-
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetAll()
@@ -122,10 +113,16 @@ public class ProductsController : ControllerBase
 
         var preco = (int)product.Preco;
 
-        if (user.Coins < preco)
+        // Débito atômico no banco (UPDATE ... WHERE Coins >= preco) em vez de
+        // ler-checar-salvar em memória — evita saldo negativo se duas
+        // compras do mesmo usuário chegarem em paralelo.
+        var linhasAfetadas = await _context.Users
+            .Where(u => u.Id == user.Id && u.Coins >= preco)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.Coins, u => u.Coins - preco));
+
+        if (linhasAfetadas == 0)
             return BadRequest("Saldo de Az Coins insuficiente.");
 
-        user.Coins -= preco;
         user.Inventario = [.. user.Inventario, product.Id];
 
         _context.Compras.Add(new Compra
@@ -139,6 +136,6 @@ public class ProductsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { coins = user.Coins });
+        return Ok(new { coins = user.Coins - preco });
     }
 }

@@ -154,8 +154,11 @@ public class CoinsController : ControllerBase
     {
         var secret = _configuration["MercadoPago:WebhookSecret"];
 
+        // Falha fechado: sem segredo configurado, nenhuma notificação é
+        // aceita (antes isso deixava o webhook completamente aberto pra
+        // qualquer POST anônimo se MercadoPago:WebhookSecret estivesse vazio).
         if (string.IsNullOrEmpty(secret))
-            return true;
+            return false;
 
         if (!httpRequest.Headers.TryGetValue("x-signature", out var signatureHeader))
             return false;

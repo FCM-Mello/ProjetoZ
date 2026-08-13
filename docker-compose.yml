@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: projetoz
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     ports:
       - "127.0.0.1:5432:5432"
@@ -26,7 +26,7 @@ services:
       - postgres
 
     environment:
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=projetoz;Username=postgres;Password=postgres
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=projetoz;Username=postgres;Password=${POSTGRES_PASSWORD}
       MercadoPago__AccessToken: ${MERCADOPAGO_ACCESS_TOKEN}
       MercadoPago__WebhookSecret: ${MERCADOPAGO_WEBHOOK_SECRET}
       MercadoPago__PublicKey: ${MERCADOPAGO_PUBLIC_KEY}
@@ -36,6 +36,10 @@ services:
       Google__ClientId: ${GOOGLE_CLIENT_ID}
       Google__ClientSecret: ${GOOGLE_CLIENT_SECRET}
       Google__YoutubeApiKey: ${GOOGLE_YOUTUBE_API_KEY}
+      Steam__ApiKey: ${STEAM_API_KEY}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
 
     ports:
       - "127.0.0.1:5000:8080"

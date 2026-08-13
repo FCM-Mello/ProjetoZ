@@ -97,10 +97,12 @@ public class GameController : ControllerBase
         if (user == null)
             return NotFound();
 
-        if (user.Coins < request.Preco)
-            return BadRequest("Saldo de Az Coins insuficiente.");
+        var linhasAfetadas = await _context.Users
+            .Where(u => u.Id == user.Id && u.Coins >= request.Preco)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.Coins, u => u.Coins - request.Preco));
 
-        user.Coins -= request.Preco;
+        if (linhasAfetadas == 0)
+            return BadRequest("Saldo de Az Coins insuficiente.");
 
         _context.Compras.Add(new Compra
         {
@@ -113,7 +115,7 @@ public class GameController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { coins = user.Coins });
+        return Ok(new { coins = user.Coins - request.Preco });
     }
 
     // Lista SteamId + nível de todo jogador com VipNivel diferente de 0 —
