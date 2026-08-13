@@ -97,9 +97,6 @@ public class SorteiosController : ControllerBase
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Create(CreateSorteioRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Titulo))
-            return BadRequest("Título é obrigatório.");
-
         var temPremioVip = request.PremioVipNivel is >= 1 and <= 3;
         var temPremioProdutos = request.PremioProdutoIds.Count > 0;
 

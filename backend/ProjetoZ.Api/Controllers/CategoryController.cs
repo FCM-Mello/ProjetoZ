@@ -31,6 +31,12 @@ namespace ProjetoZ.Api.Controllers
         [Authorize(Policy = "Admin")]
         public async Task<IActionResult> Create(CreateCategoryRequest request)
         {
+            var nomeJaExiste = await _context.Categorys
+                .AnyAsync(c => c.Nome == request.Nome);
+
+            if (nomeJaExiste)
+                return BadRequest("Já existe uma categoria com esse nome.");
+
             var category = new Category
             {
                 Nome = request.Nome

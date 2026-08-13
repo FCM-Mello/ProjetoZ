@@ -98,9 +98,6 @@ public class ClipesController : ControllerBase
         if (meuId == null)
             return Unauthorized();
 
-        if (string.IsNullOrWhiteSpace(request.Titulo))
-            return BadRequest("Título é obrigatório.");
-
         var usuario = await _context.Users.FindAsync(meuId.Value);
 
         if (usuario == null)

@@ -199,6 +199,12 @@ namespace ProjetoZ.Api.Controllers
             if (canal == null)
                 return Redirect($"{frontendUrl}/Clipes?youtube=erro");
 
+            var canalJaVinculado = await _context.Users
+                .AnyAsync(u => u.Id != user.Id && u.YoutubeChannelId == canal.Value.Id);
+
+            if (canalJaVinculado)
+                return Redirect($"{frontendUrl}/Clipes?youtube=ja-vinculado-outra-conta");
+
             user.YoutubeChannelId = canal.Value.Id;
             user.YoutubeChannelNome = canal.Value.Nome;
 

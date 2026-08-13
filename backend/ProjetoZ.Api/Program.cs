@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -13,6 +14,22 @@ using Microsoft.AspNetCore.HttpOverrides;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+// O frontend lê erro como texto puro (response.text()) em todas as chamadas,
+// então a falha automática de DataAnnotations precisa devolver o mesmo
+// formato — senão vira um JSON cru de ValidationProblemDetails na tela.
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var mensagem = context.ModelState
+            .SelectMany(kv => kv.Value?.Errors ?? [])
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault() ?? "Requisição inválida.";
+
+        return new BadRequestObjectResult(mensagem);
+    };
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

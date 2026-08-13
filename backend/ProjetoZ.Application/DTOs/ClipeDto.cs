@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProjetoZ.Application.DTOs
 {
     public class ClipeDto
@@ -47,8 +49,11 @@ namespace ProjetoZ.Application.DTOs
 
     public class CreateClipeRequest
     {
+        [Required(ErrorMessage = "Título é obrigatório.")]
+        [StringLength(200)]
         public string Titulo { get; set; } = string.Empty;
 
+        [StringLength(500)]
         public string Url { get; set; } = string.Empty;
     }
 }
