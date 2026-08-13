@@ -123,6 +123,7 @@ builder.Services.AddHttpClient<MercadoPagoService>();
 builder.Services.AddHttpClient<YoutubeService>();
 
 builder.Services.AddHostedService<FechamentoSemanalClipesService>();
+builder.Services.AddHostedService<ExpiracaoVipService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>
