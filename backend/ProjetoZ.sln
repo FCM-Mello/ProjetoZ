@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjetoZ.Infrastructure", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjetoZ.Persistence", "ProjetoZ.Persistence\ProjetoZ.Persistence.csproj", "{98022F51-5A8E-44BA-9C06-04844020B079}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjetoZ.Tests", "ProjetoZ.Tests\ProjetoZ.Tests.csproj", "{928CED62-CA30-4587-9CF2-08C406CD22AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{98022F51-5A8E-44BA-9C06-04844020B079}.Release|x64.Build.0 = Release|Any CPU
 		{98022F51-5A8E-44BA-9C06-04844020B079}.Release|x86.ActiveCfg = Release|Any CPU
 		{98022F51-5A8E-44BA-9C06-04844020B079}.Release|x86.Build.0 = Release|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Release|x64.Build.0 = Release|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{928CED62-CA30-4587-9CF2-08C406CD22AE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
