@@ -139,6 +139,134 @@ public class GameController : ControllerBase
         return Ok(vips);
     }
 
+    // Intervalo mínimo entre dois resgates do mesmo seguro.
+    private const int HorasCooldownResgate = 48;
+
+    // Registra o seguro de um item comprado dentro do jogo (normalmente
+    // veículo). Cada chamada cria um seguro novo — o mesmo jogador pode ter
+    // vários do mesmo item, cada um com seu próprio cooldown.
+    [HttpPost("seguro")]
+    public async Task<IActionResult> CriarSeguro(CriarSeguroRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        if (string.IsNullOrWhiteSpace(request.Id))
+            return BadRequest("Id do item é obrigatório.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        if (user == null)
+            return NotFound();
+
+        var seguro = new Seguro
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            ItemId = request.Id.Trim(),
+        };
+
+        _context.Seguros.Add(seguro);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { idSeguro = seguro.Id });
+    }
+
+    // Lista os seguros do jogador e se cada um já pode ser resgatado.
+    [HttpPost("seguros")]
+    public async Task<IActionResult> GetSeguros(ListaSegurosRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        if (user == null)
+            return NotFound();
+
+        var seguros = await _context.Seguros
+            .Where(s => s.UserId == user.Id)
+            .ToListAsync();
+
+        var limite = DateTime.UtcNow.AddHours(-HorasCooldownResgate);
+
+        var dtos = seguros
+            .Select(s =>
+            {
+                var podeResgatar = s.UltimoResgate == null || s.UltimoResgate <= limite;
+
+                return new SeguroDto
+                {
+                    IdSeguro = s.Id,
+                    Id = s.ItemId,
+                    PodeResgatar = podeResgatar,
+                    ProximoResgateEm = podeResgatar
+                        ? null
+                        : s.UltimoResgate!.Value.AddHours(HorasCooldownResgate)
+                };
+            })
+            .ToList();
+
+        return Ok(dtos);
+    }
+
+    // Marca o seguro como resgatado agora, respeitando o cooldown.
+    [HttpPost("seguro/resgate")]
+    public async Task<IActionResult> ResgatarSeguro(ResgatarSeguroRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        if (user == null)
+            return NotFound();
+
+        var seguro = await _context.Seguros
+            .FirstOrDefaultAsync(s => s.Id == request.IdSeguro && s.UserId == user.Id);
+
+        if (seguro == null)
+            return NotFound();
+
+        var agora = DateTime.UtcNow;
+        var limite = agora.AddHours(-HorasCooldownResgate);
+
+        // UPDATE condicional em vez de ler-checar-salvar: se o mod disparar
+        // dois resgates do mesmo seguro em paralelo, só um passa.
+        var linhasAfetadas = await _context.Seguros
+            .Where(s => s.Id == seguro.Id && (s.UltimoResgate == null || s.UltimoResgate <= limite))
+            .ExecuteUpdateAsync(sp => sp.SetProperty(s => s.UltimoResgate, agora));
+
+        if (linhasAfetadas == 0)
+            return BadRequest($"Esse seguro só pode ser resgatado novamente {HorasCooldownResgate}h depois do último resgate.");
+
+        _context.Compras.Add(new Compra
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Tipo = "seguro",
+            Descricao = $"Resgate de seguro: {seguro.ItemId}",
+            Coins = 0,
+        });
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { proximoResgateEm = agora.AddHours(HorasCooldownResgate) });
+    }
+
     private bool ValidarApiKey(string? providedKey)
     {
         var apiKey = _configuration["GameServer:ApiKey"];

@@ -36,4 +36,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<ClipeCurtida> ClipeCurtidas => Set<ClipeCurtida>();
 
     public DbSet<ClipeConfig> ClipeConfigs => Set<ClipeConfig>();
+
+    public DbSet<Seguro> Seguros => Set<Seguro>();
 }

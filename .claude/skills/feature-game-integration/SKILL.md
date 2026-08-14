@@ -23,6 +23,18 @@ Comparação resistente a timing attack — nunca trocar por `==`/`.Equals()` nu
 - `POST /api/game/comprar` (`PlayerComprarRequest: {ApiKey, SteamId, ItemId, ItemNome, Preco}`) — debita coins pra item que só existe no jogo (não cadastrado em `Products`). Registra `Compra` com `Tipo = "mod"`, que aparece no Histórico do site como "In-game". Débito via `ExecuteUpdateAsync` atômico (mesmo padrão dos outros controllers de compra, ver `feature-vip`).
 - `POST /api/game/vips` (`ListaVipsRequest: {ApiKey}`) — devolve `{steamId, vipNivel}` de todo mundo com `VipNivel != 0` **no campo bruto**, sem considerar expiração (pedido explícito assim; o `ExpiracaoVipService` — ver `feature-vip` — mantém esse campo bruto sincronizado a cada hora, então o atraso máximo é de ~1h).
 
+### Seguro de itens (veículos)
+
+Entidade `Seguro` (`Id`, `UserId`, `ItemId`, `CriadoEm`, `UltimoResgate`). `ItemId` é o id do `ArkZ_Catalogo.c` do mod (ex: `"carro"`), **não** um Guid — não confundir com `Seguro.Id`, que é o `idSeguro` devolvido pela API.
+
+- `POST /api/game/seguro` (`CriarSeguroRequest: {ApiKey, SteamId, Id}`) — registra um seguro e devolve `{idSeguro}`. Cada chamada cria uma linha nova: o mesmo jogador pode ter **vários seguros do mesmo item**, cada um com cooldown independente.
+- `POST /api/game/seguros` (`ListaSegurosRequest: {ApiKey, SteamId}`) — devolve `[{idSeguro, id, podeResgatar, proximoResgateEm}]`. `proximoResgateEm` vem `null` quando `podeResgatar` é `true`.
+- `POST /api/game/seguro/resgate` (`ResgatarSeguroRequest: {ApiKey, SteamId, IdSeguro}`) — marca `UltimoResgate = agora` e registra uma `Compra` (`Tipo = "seguro"`, 0 coins) pro histórico do site. Devolve `{proximoResgateEm}`.
+
+Regras: cooldown de 48h (`GameController.HorasCooldownResgate`) contado a partir do **último resgate** — um seguro recém-criado (`UltimoResgate == null`) já nasce resgatável. O resgate usa `ExecuteUpdateAsync` condicional (`UltimoResgate == null || UltimoResgate <= agora-48h`) pra que dois resgates simultâneos do mesmo seguro não passem os dois. Resgatar seguro de outro jogador dá 404 (o filtro por `UserId` está no `FirstOrDefaultAsync`, não só no update).
+
+A API **não** entrega o item de volta no jogo nem cobra nada pelo seguro — só guarda o registro e o cooldown; quem age no mundo é o mod.
+
 ## Documentação relacionada
 
 `docs/loja-mod.md` tem a especificação de layout de uma tela de loja dentro do jogo consumindo esses endpoints (proposta, não necessariamente implementada no mod ainda).
