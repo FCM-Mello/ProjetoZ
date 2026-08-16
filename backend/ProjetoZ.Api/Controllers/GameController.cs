@@ -139,12 +139,84 @@ public class GameController : ControllerBase
         return Ok(vips);
     }
 
+    // Job do mod roda a cada ~15min e manda a posição de todos os veículos
+    // segurados de todos os jogadores numa única chamada em lote (não uma
+    // chamada por jogador). Um veículo só é atualizado se já estiver
+    // vinculado a um seguro (CarroId preenchido numa sincronização anterior)
+    // ou se existir um seguro ativo e ainda sem vínculo desse jogador — nesse
+    // caso o vínculo é feito agora, na primeira sincronização desse carro.
+    // Entradas sem usuário cadastrado ou sem seguro disponível pra vincular
+    // são ignoradas silenciosamente, sem quebrar o resto do lote.
+    [HttpPost("veiculos/posicao")]
+    public async Task<IActionResult> SincronizarPosicoes(SincronizarPosicoesRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        var agora = DateTime.UtcNow;
+        var atualizados = 0;
+
+        // Evita que dois carrosId diferentes do mesmo jogador, sem vínculo
+        // ainda, acabem "roubando" o mesmo seguro dentro do mesmo lote — a
+        // query abaixo bate no banco e não vê vínculos feitos mais cedo
+        // nesta mesma requisição (só ficam visíveis depois do SaveChanges).
+        var segurosVinculadosNesteLote = new HashSet<Guid>();
+
+        foreach (var veiculo in request.Veiculos)
+        {
+            if (string.IsNullOrWhiteSpace(veiculo.CarroId) || string.IsNullOrWhiteSpace(veiculo.SteamId))
+                continue;
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == veiculo.SteamId);
+
+            if (user == null)
+                continue;
+
+            var seguro = await _context.Seguros
+                .FirstOrDefaultAsync(s => s.CarroId == veiculo.CarroId && s.UserId == user.Id);
+
+            if (seguro == null)
+            {
+                seguro = await _context.Seguros
+                    .Where(s => s.UserId == user.Id
+                        && s.CarroId == null
+                        && s.ExpiraEm > agora
+                        && !segurosVinculadosNesteLote.Contains(s.Id))
+                    .OrderBy(s => s.CriadoEm)
+                    .FirstOrDefaultAsync();
+
+                if (seguro == null)
+                    continue;
+
+                seguro.CarroId = veiculo.CarroId;
+            }
+
+            segurosVinculadosNesteLote.Add(seguro.Id);
+
+            seguro.VeiculoNome = veiculo.Nome;
+            seguro.PosicaoGrid = veiculo.PosicaoGrid;
+            seguro.PosicaoX = veiculo.X;
+            seguro.PosicaoZ = veiculo.Z;
+            seguro.PosicaoAtualizadaEm = agora;
+
+            atualizados++;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { atualizados });
+    }
+
     // Intervalo mínimo entre dois resgates do mesmo seguro.
     private const int HorasCooldownResgate = 48;
 
+    // Duração do seguro a partir da criação.
+    private const int MesesDuracaoSeguro = 1;
+
     // Registra o seguro de um item comprado dentro do jogo (normalmente
     // veículo). Cada chamada cria um seguro novo — o mesmo jogador pode ter
-    // vários do mesmo item, cada um com seu próprio cooldown.
+    // vários do mesmo item, cada um com seu próprio cooldown. Dura 1 mês.
     [HttpPost("seguro")]
     public async Task<IActionResult> CriarSeguro(CriarSeguroRequest request)
     {
@@ -163,11 +235,15 @@ public class GameController : ControllerBase
         if (user == null)
             return NotFound();
 
+        var agora = DateTime.UtcNow;
+
         var seguro = new Seguro
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             ItemId = request.Id.Trim(),
+            CriadoEm = agora,
+            ExpiraEm = agora.AddMonths(MesesDuracaoSeguro),
         };
 
         _context.Seguros.Add(seguro);
@@ -177,7 +253,8 @@ public class GameController : ControllerBase
         return Ok(new { idSeguro = seguro.Id });
     }
 
-    // Lista os seguros do jogador e se cada um já pode ser resgatado.
+    // Lista os seguros ativos (não expirados) do jogador e se cada um já
+    // pode ser resgatado.
     [HttpPost("seguros")]
     public async Task<IActionResult> GetSeguros(ListaSegurosRequest request)
     {
@@ -194,7 +271,7 @@ public class GameController : ControllerBase
             return NotFound();
 
         var seguros = await _context.Seguros
-            .Where(s => s.UserId == user.Id)
+            .Where(s => s.UserId == user.Id && s.ExpiraEm > DateTime.UtcNow)
             .ToListAsync();
 
         var limite = DateTime.UtcNow.AddHours(-HorasCooldownResgate);
@@ -245,6 +322,10 @@ public class GameController : ControllerBase
             return NotFound();
 
         var agora = DateTime.UtcNow;
+
+        if (seguro.ExpiraEm <= agora)
+            return BadRequest("Esse seguro expirou.");
+
         var limite = agora.AddHours(-HorasCooldownResgate);
 
         // UPDATE condicional em vez de ler-checar-salvar: se o mod disparar

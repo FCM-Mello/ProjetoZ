@@ -1,0 +1,199 @@
+.containerSeguros {
+    width: 92%;
+    max-width: 1240px;
+    margin: 70px auto 40px;
+}
+
+.segurosSubtitulo {
+    color: var(--color-text-muted);
+    margin: 8px 0 24px;
+}
+
+.segurosEstado {
+    padding: 20px;
+    color: var(--color-text-muted);
+}
+
+.segurosEstado-erro {
+    color: var(--color-danger-strong);
+}
+
+.segurosLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.mapaWrapper {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+}
+
+.mapaImagem {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mapaMarcador {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    transform: translate(-50%, -50%);
+
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    padding: 0;
+}
+
+.mapaMarcadorPino {
+    display: block;
+
+    width: 14px;
+    height: 14px;
+
+    border-radius: 50%;
+
+    background: var(--color-accent);
+    border: 2px solid #1a1004;
+
+    box-shadow: 0 0 0 0 rgba(255,209,102,.6);
+
+    animation: mapaMarcadorPulso 2s ease-out infinite;
+}
+
+@keyframes mapaMarcadorPulso {
+    0% { box-shadow: 0 0 0 0 rgba(255,209,102,.55); }
+    70% { box-shadow: 0 0 0 10px rgba(255,209,102,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,209,102,0); }
+}
+
+.mapaMarcador-ativo .mapaMarcadorPino {
+    background: var(--color-info);
+    animation: none;
+    box-shadow: 0 0 0 4px rgba(56,189,248,.35);
+}
+
+.mapaMarcadorTooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    min-width: 140px;
+
+    padding: 8px 12px;
+
+    border-radius: 8px;
+    border: 1px solid var(--color-border-strong);
+
+    background: var(--color-surface-alt);
+    box-shadow: 0 8px 20px rgba(0,0,0,.4);
+
+    font-size: 12px;
+    color: var(--color-text-muted);
+
+    white-space: nowrap;
+
+    z-index: 2;
+}
+
+.mapaMarcadorTooltip strong {
+    color: var(--color-text);
+    font-size: 13px;
+}
+
+.segurosLista {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.seguroCard {
+    padding: 14px 16px;
+
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+
+    background: var(--color-surface);
+
+    transition: border-color .2s, transform .2s;
+}
+
+.seguroCard-clicavel {
+    cursor: pointer;
+}
+
+.seguroCard-ativo {
+    border-color: var(--color-info);
+    box-shadow: 0 0 0 1px rgba(56,189,248,.35);
+}
+
+.seguroCardTopo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+
+    margin-bottom: 6px;
+}
+
+.seguroCardNome {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.seguroCardExpira {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.seguroCardPosicao {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.seguroCardDesatualizado {
+    color: var(--color-danger-strong);
+}
+
+.seguroCardAguardando {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .segurosLayout {
+        grid-template-columns: 1fr;
+    }
+}

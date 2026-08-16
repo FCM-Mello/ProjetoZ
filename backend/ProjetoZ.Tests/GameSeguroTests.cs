@@ -53,6 +53,7 @@ public class GameSeguroTests : IDisposable
             UserId = userId,
             ItemId = itemId,
             CriadoEm = DateTime.UtcNow,
+            ExpiraEm = DateTime.UtcNow.AddMonths(1),
             UltimoResgate = ultimoResgate,
         };
 

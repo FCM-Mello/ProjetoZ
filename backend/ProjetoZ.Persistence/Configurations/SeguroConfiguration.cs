@@ -13,6 +13,11 @@ namespace ProjetoZ.Persistence.Configurations
             builder.HasIndex(s => s.UserId);
 
             builder.Property(s => s.ItemId).HasMaxLength(100);
+
+            // Postgres permite múltiplos NULLs num índice único — só passa a
+            // impedir duplicidade depois que um CarroId é de fato atribuído
+            // pela sincronização de posição.
+            builder.HasIndex(s => s.CarroId).IsUnique();
         }
     }
 }
