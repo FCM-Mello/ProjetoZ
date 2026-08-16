@@ -219,7 +219,10 @@ public class GameController : ControllerBase
         return Ok(dtos);
     }
 
-    // Marca o seguro como resgatado agora, respeitando o cooldown.
+    // Marca o seguro como resgatado agora, respeitando o cooldown — exceto no
+    // resgate expresso (Pago = true), em que o mod já cobrou o jogador via
+    // /api/game/comprar e o cooldown é pulado. Nos dois casos o timestamp é
+    // atualizado, então o próximo resgate grátis conta a partir de agora.
     [HttpPost("seguro/resgate")]
     public async Task<IActionResult> ResgatarSeguro(ResgatarSeguroRequest request)
     {
@@ -245,20 +248,32 @@ public class GameController : ControllerBase
         var limite = agora.AddHours(-HorasCooldownResgate);
 
         // UPDATE condicional em vez de ler-checar-salvar: se o mod disparar
-        // dois resgates do mesmo seguro em paralelo, só um passa.
-        var linhasAfetadas = await _context.Seguros
-            .Where(s => s.Id == seguro.Id && (s.UltimoResgate == null || s.UltimoResgate <= limite))
+        // dois resgates do mesmo seguro em paralelo, só um passa. No resgate
+        // expresso a condição de cooldown sai, mas o UPDATE continua sendo a
+        // única escrita — o comportamento concorrente não muda.
+        var atualizacao = _context.Seguros.Where(s => s.Id == seguro.Id);
+
+        if (!request.Pago)
+            atualizacao = atualizacao.Where(s => s.UltimoResgate == null || s.UltimoResgate <= limite);
+
+        var linhasAfetadas = await atualizacao
             .ExecuteUpdateAsync(sp => sp.SetProperty(s => s.UltimoResgate, agora));
 
         if (linhasAfetadas == 0)
-            return BadRequest($"Esse seguro só pode ser resgatado novamente {HorasCooldownResgate}h depois do último resgate.");
+            return request.Pago
+                ? NotFound()
+                : BadRequest($"Esse seguro só pode ser resgatado novamente {HorasCooldownResgate}h depois do último resgate.");
 
         _context.Compras.Add(new Compra
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
             Tipo = "seguro",
-            Descricao = $"Resgate de seguro: {seguro.ItemId}",
+            // O débito do resgate expresso já foi registrado pelo /comprar
+            // (Tipo = "mod"), então aqui fica 0 pra não contar duas vezes.
+            Descricao = request.Pago
+                ? $"Resgate expresso de seguro: {seguro.ItemId}"
+                : $"Resgate de seguro: {seguro.ItemId}",
             Coins = 0,
         });
 

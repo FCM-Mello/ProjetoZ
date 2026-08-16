@@ -26,6 +26,11 @@ namespace ProjetoZ.Application.DTOs
         public string ApiKey { get; set; } = string.Empty;
 
         public Guid IdSeguro { get; set; }
+
+        // Resgate expresso: o mod já debitou o preço via /api/game/comprar e
+        // manda true pra pular o cooldown. Só o servidor do mod envia isso —
+        // o cliente do jogo não fala direto com essa API.
+        public bool Pago { get; set; }
     }
 
     public class SeguroDto

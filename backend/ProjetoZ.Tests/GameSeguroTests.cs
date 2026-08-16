@@ -362,4 +362,136 @@ public class GameSeguroTests : IDisposable
         var intacto = await _db.Context.Seguros.FindAsync(seguroDoOutro.Id);
         Assert.Null(intacto!.UltimoResgate);
     }
+
+    [Fact]
+    public async Task ResgatarSeguro_PagoDentroDoCooldown_ResgataEReiniciaOCooldown()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        var resgatadoEm = DateTime.UtcNow.AddHours(-10);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: resgatadoEm);
+        var controller = CriarController();
+
+        var resultado = await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            Pago = true,
+        });
+
+        Assert.IsType<OkObjectResult>(resultado);
+
+        _db.Context.ChangeTracker.Clear();
+
+        // O cooldown volta a contar a partir de agora, não da data antiga.
+        var atualizado = await _db.Context.Seguros.FindAsync(seguro.Id);
+        Assert.Equal(DateTime.UtcNow, atualizado!.UltimoResgate!.Value, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_Pago_RegistraComoExpressoSemCobrarCoinsDeNovo()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: DateTime.UtcNow.AddHours(-1));
+        var controller = CriarController();
+
+        await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            Pago = true,
+        });
+
+        var compra = Assert.Single(await _db.Context.Compras.ToListAsync());
+        Assert.Equal("seguro", compra.Tipo);
+        // O débito real já foi registrado pelo /comprar (Tipo = "mod"); aqui
+        // fica 0 pra não contar os mesmos coins duas vezes no histórico.
+        Assert.Equal(0, compra.Coins);
+        Assert.Contains("expresso", compra.Descricao, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_PagoNaoBurlaDonoDoSeguro()
+    {
+        CriarUsuario(SteamIdJogador);
+        var outro = CriarUsuario("76500000000000888");
+        var seguroDoOutro = CriarSeguro(outro.Id, "carro", ultimoResgate: null);
+        var controller = CriarController();
+
+        var resultado = await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguroDoOutro.Id,
+            Pago = true,
+        });
+
+        Assert.IsType<NotFoundResult>(resultado);
+
+        _db.Context.ChangeTracker.Clear();
+
+        var intacto = await _db.Context.Seguros.FindAsync(seguroDoOutro.Id);
+        Assert.Null(intacto!.UltimoResgate);
+        Assert.Empty(await _db.Context.Compras.ToListAsync());
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_PagoFalse_MantemBloqueioDeCooldown()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: DateTime.UtcNow.AddHours(-10));
+        var controller = CriarController();
+
+        var resultado = await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            Pago = false,
+        });
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_PagoApiKeyErrada_ContinuaUnauthorized()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: null);
+        var controller = CriarController();
+
+        var resultado = await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = "chave-errada",
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            Pago = true,
+        });
+
+        Assert.IsType<UnauthorizedResult>(resultado);
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_PagoDuasVezesSeguidas_AmbasPassam()
+    {
+        // Sem cooldown pra segurar, cada resgate expresso pago vale — é o mod
+        // que garante que só chega aqui depois de um débito confirmado.
+        var user = CriarUsuario(SteamIdJogador);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: null);
+        var controller = CriarController();
+
+        var pedido = new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            Pago = true,
+        };
+
+        Assert.IsType<OkObjectResult>(await controller.ResgatarSeguro(pedido));
+        Assert.IsType<OkObjectResult>(await controller.ResgatarSeguro(pedido));
+
+        Assert.Equal(2, (await _db.Context.Compras.ToListAsync()).Count);
+    }
 }
