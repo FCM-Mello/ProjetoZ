@@ -27,6 +27,7 @@
 
 .mapaWrapper {
     position: relative;
+    z-index: 0;
 
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -40,65 +41,11 @@
     box-shadow: var(--shadow-panel);
 }
 
-.mapaImagem {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.mapaMarcador {
+.mapa3dInfo {
     position: absolute;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 20px;
-    height: 20px;
-
-    transform: translate(-50%, -50%);
-
-    border: none;
-    background: transparent;
-    cursor: pointer;
-
-    padding: 0;
-}
-
-.mapaMarcadorPino {
-    display: block;
-
-    width: 14px;
-    height: 14px;
-
-    border-radius: 50%;
-
-    background: var(--color-accent);
-    border: 2px solid #1a1004;
-
-    box-shadow: 0 0 0 0 rgba(255,209,102,.6);
-
-    animation: mapaMarcadorPulso 2s ease-out infinite;
-}
-
-@keyframes mapaMarcadorPulso {
-    0% { box-shadow: 0 0 0 0 rgba(255,209,102,.55); }
-    70% { box-shadow: 0 0 0 10px rgba(255,209,102,0); }
-    100% { box-shadow: 0 0 0 0 rgba(255,209,102,0); }
-}
-
-.mapaMarcador-ativo .mapaMarcadorPino {
-    background: var(--color-info);
-    animation: none;
-    box-shadow: 0 0 0 4px rgba(56,189,248,.35);
-}
-
-.mapaMarcadorTooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
+    z-index: 20;
+    top: 12px;
+    left: 12px;
 
     display: flex;
     flex-direction: column;
@@ -117,17 +64,18 @@
     font-size: 12px;
     color: var(--color-text-muted);
 
-    white-space: nowrap;
-
-    z-index: 2;
+    pointer-events: none;
 }
 
-.mapaMarcadorTooltip strong {
+.mapa3dInfo strong {
     color: var(--color-text);
     font-size: 13px;
 }
 
 .segurosLista {
+    position: relative;
+    z-index: 1;
+
     display: flex;
     flex-direction: column;
     gap: 12px;

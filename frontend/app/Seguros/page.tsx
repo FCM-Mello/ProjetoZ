@@ -3,20 +3,8 @@
 import { useEffect, useState } from "react";
 import { getMeusSeguros, SeguroAtivo } from "../services/segurosApi";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import MapaLeaflet from "./components/MapaLeaflet";
 import "./page.css";
-
-// Chernarus+ tem 15360x15360 metros de mundo. A imagem do mapa cobre esse
-// mundo inteiro de ponta a ponta, então a conversão é uma regra de três
-// simples. Z cresce pra norte no jogo, mas a imagem cresce pra baixo — daí o
-// "100 -" na vertical.
-const TAMANHO_MUNDO_METROS = 15360;
-
-function posicaoNoMapa(x: number, z: number) {
-    return {
-        left: `${(x / TAMANHO_MUNDO_METROS) * 100}%`,
-        top: `${100 - (z / TAMANHO_MUNDO_METROS) * 100}%`,
-    };
-}
 
 function formatarData(data: string) {
     return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -59,7 +47,7 @@ export default function Seguros() {
             <h2 className="section-title">Seguros ativos</h2>
             <p className="segurosSubtitulo">
                 Veículos e itens segurados no jogo — cada seguro dura 1 mês. A posição no mapa é sincronizada
-                pelo servidor a cada ~15 minutos.
+                pelo servidor a cada ~15 minutos. Arraste pra mover o mapa e role o mouse pra dar zoom.
             </p>
 
             {carregando && <p className="segurosEstado">Carregando...</p>}
@@ -72,33 +60,33 @@ export default function Seguros() {
             {!carregando && !erro && seguros.length > 0 && (
                 <div className="segurosLayout">
                     <div className="mapaWrapper">
-                        <img src="/Images/mapa-chernarus.jpg" alt="Mapa do Chernarus" className="mapaImagem" />
+                        <MapaLeaflet
+                            veiculos={comPosicao.map(s => ({
+                                idSeguro: s.idSeguro,
+                                nome: s.veiculoNome ?? s.id,
+                                x: s.posicaoX!,
+                                z: s.posicaoZ!,
+                            }))}
+                            selecionado={selecionado}
+                            onSelecionar={setSelecionado}
+                        />
 
-                        {comPosicao.map(seguro => {
-                            const pos = posicaoNoMapa(seguro.posicaoX!, seguro.posicaoZ!);
-                            const ativo = selecionado === seguro.idSeguro;
-
-                            return (
-                                <button
-                                    key={seguro.idSeguro}
-                                    className={`mapaMarcador ${ativo ? "mapaMarcador-ativo" : ""}`}
-                                    style={pos}
-                                    onClick={() => setSelecionado(ativo ? null : seguro.idSeguro)}
-                                    title={seguro.veiculoNome ?? seguro.id}
-                                >
-                                    <span className="mapaMarcadorPino" />
-                                    {ativo && (
-                                        <span className="mapaMarcadorTooltip">
+                        {selecionado && comPosicao.some(s => s.idSeguro === selecionado) && (
+                            <div className="mapa3dInfo">
+                                {(() => {
+                                    const seguro = comPosicao.find(s => s.idSeguro === selecionado)!;
+                                    return (
+                                        <>
                                             <strong>{seguro.veiculoNome ?? seguro.id}</strong>
                                             {seguro.posicaoGrid && <span>Grid {seguro.posicaoGrid}</span>}
                                             {seguro.posicaoAtualizadaEm && (
                                                 <span>Atualizado há {minutosAtras(seguro.posicaoAtualizadaEm)} min</span>
                                             )}
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        })}
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        )}
                     </div>
 
                     <div className="segurosLista">
