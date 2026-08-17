@@ -20,6 +20,13 @@ export default function Header() {
         return pathname === href ? "active" : "";
     }
 
+    // AZ é a entrada de monetização — recebe destaque dourado sempre, não só
+    // quando a página está ativa, pra chamar atenção sem depender do
+    // usuário já estar nela.
+    function azLinkClass() {
+        return `navAzDestaque ${linkClass("/Az")}`.trim();
+    }
+
     return (
         <header className="header">
             <div className="containerHeader">
@@ -27,7 +34,7 @@ export default function Header() {
 
                 <nav className="navHeader navMain">
                     <Link href="/Home" className={linkClass("/Home")}>LOJA</Link>
-                    <Link href="/Az" className={linkClass("/Az")}>AZ</Link>
+                    <Link href="/Az" className={azLinkClass()}>AZ</Link>
                     <Link href="/Vip" className={linkClass("/Vip")}>VIP</Link>
                     <Link href="/Sorteios" className={linkClass("/Sorteios")}>SORTEIOS</Link>
                     <Link href="/Clipes" className={linkClass("/Clipes")}>CLIPES</Link>

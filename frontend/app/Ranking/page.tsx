@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 import { getRanking, resetarRanking } from "../services/rankingApi";
 import { RankingJogador } from "../models/Ranking";
+import Skeleton from "../components/Skeleton";
 import "./page.css";
 
 type Criterio = "kd" | "koth";
@@ -19,6 +21,7 @@ export default function Ranking() {
     const [carregando, setCarregando] = useState(true);
     const [criterio, setCriterio] = useState<Criterio>("kd");
     const [resetando, setResetando] = useState(false);
+    const listaRef = useScrollReveal<HTMLDivElement>(jogadores.length);
 
     useEffect(() => {
         carregar();
@@ -89,9 +92,25 @@ export default function Ranking() {
                 <p className="rankingVazio">Nenhum jogador no ranking ainda.</p>
             )}
 
-            <div className="rankingLista">
+            {carregando && (
+                <div className="rankingLista">
+                    {[0, 1, 2, 3, 4].map(i => (
+                        <div key={i} className="rankingItem">
+                            <Skeleton width={24} height={16} />
+                            <Skeleton width={36} height={36} borderRadius="50%" />
+                            <Skeleton width="30%" height={16} />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="rankingLista" ref={listaRef}>
                 {ordenados.map((jogador, i) => (
-                    <div key={jogador.steamId} className="rankingItem">
+                    <div
+                        key={jogador.steamId}
+                        className="rankingItem reveal"
+                        style={{ transitionDelay: `${Math.min(i, 8) * 45}ms` }}
+                    >
                         <span className="rankingPosicao">{i + 1}º</span>
 
                         {jogador.avatar && <img className="rankingAvatar" src={jogador.avatar} alt={jogador.nome} />}

@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { getMinhasCompras } from "../services/comprasApi";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 import { Compra } from "../models/Compra";
+import Skeleton from "../components/Skeleton";
 import "./page.css";
 
 const ROTULOS_TIPO: Record<Compra["tipo"], string> = {
@@ -20,6 +22,7 @@ export default function Historico() {
 
     const [compras, setCompras] = useState<Compra[]>([]);
     const [carregando, setCarregando] = useState(true);
+    const listaRef = useScrollReveal<HTMLDivElement>(compras.length);
 
     useEffect(() => {
         carregar();
@@ -54,9 +57,24 @@ export default function Historico() {
                 <p className="historicoVazio">Você ainda não fez nenhuma compra.</p>
             )}
 
-            <div className="lista-compras">
-                {compras.map(compra => (
-                    <div key={compra.id} className="compra-item">
+            {carregando && (
+                <div className="lista-compras">
+                    {[0, 1, 2].map(i => (
+                        <div key={i} className="compra-item">
+                            <Skeleton width={70} height={24} borderRadius={20} />
+                            <Skeleton width="40%" height={16} />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="lista-compras" ref={listaRef}>
+                {compras.map((compra, i) => (
+                    <div
+                        key={compra.id}
+                        className="compra-item reveal"
+                        style={{ transitionDelay: `${Math.min(i, 8) * 45}ms` }}
+                    >
                         <span className={`compra-tipo tipo-${compra.tipo}`}>
                             {ROTULOS_TIPO[compra.tipo]}
                         </span>

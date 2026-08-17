@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 import { getSorteios, criarSorteio, entrarSorteio, sortearSorteio, excluirSorteio } from "../services/sorteiosApi";
 import { getProducts } from "../services/productsApi";
 import { getVipTiers } from "../services/vipApi";
@@ -16,6 +18,7 @@ export default function Sorteios() {
     useRequireAuth();
 
     const { user } = useAuth();
+    const { sucesso, erro: mostrarErro } = useToast();
     const isAdmin = user?.isAdmin ?? false;
 
     const [sorteios, setSorteios] = useState<Sorteio[]>([]);
@@ -23,6 +26,7 @@ export default function Sorteios() {
     const [vipTiers, setVipTiers] = useState<VipTier[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [processando, setProcessando] = useState<string | null>(null);
+    const listaRef = useScrollReveal<HTMLDivElement>(sorteios.length);
 
     useEffect(() => {
         carregarSorteios();
@@ -45,7 +49,7 @@ export default function Sorteios() {
             await carregarSorteios();
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "Erro ao criar sorteio.");
+            mostrarErro(e instanceof Error ? e.message : "Erro ao criar sorteio.");
         }
     }
 
@@ -57,7 +61,7 @@ export default function Sorteios() {
             await carregarSorteios();
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "Erro ao entrar no sorteio.");
+            mostrarErro(e instanceof Error ? e.message : "Erro ao entrar no sorteio.");
         } finally {
             setProcessando(null);
         }
@@ -74,7 +78,7 @@ export default function Sorteios() {
             await carregarSorteios();
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "Erro ao excluir sorteio.");
+            mostrarErro(e instanceof Error ? e.message : "Erro ao excluir sorteio.");
         } finally {
             setProcessando(null);
         }
@@ -88,11 +92,11 @@ export default function Sorteios() {
 
         try {
             const resultado = await sortearSorteio(sorteio.id);
-            alert(`Vencedor: ${resultado.vencedorNome ?? "usuário"}!`);
+            sucesso(`Vencedor: ${resultado.vencedorNome ?? "usuário"}.`);
             await carregarSorteios();
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "Erro ao sortear.");
+            mostrarErro(e instanceof Error ? e.message : "Erro ao sortear.");
         } finally {
             setProcessando(null);
         }
@@ -114,9 +118,13 @@ export default function Sorteios() {
                 <p className="sorteiosVazio">Nenhum sorteio disponível no momento.</p>
             )}
 
-            <div className="lista-sorteios">
-                {sorteios.map(sorteio => (
-                    <div key={sorteio.id} className={`sorteio-card status-${sorteio.status}`}>
+            <div className="lista-sorteios" ref={listaRef}>
+                {sorteios.map((sorteio, i) => (
+                    <div
+                        key={sorteio.id}
+                        className={`sorteio-card status-${sorteio.status} reveal`}
+                        style={{ transitionDelay: `${Math.min(i, 8) * 45}ms` }}
+                    >
                         <div className="sorteio-cabecalho">
                             <h3>{sorteio.titulo}</h3>
 

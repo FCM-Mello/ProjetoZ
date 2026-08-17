@@ -1,0 +1,10 @@
+@media (prefers-reduced-motion: no-preference){
+    .pageTransition{
+        animation: page-enter .35s ease both;
+    }
+}
+
+@keyframes page-enter{
+    from{ opacity: 0; transform: translateY(10px); }
+    to{ opacity: 1; transform: translateY(0); }
+}

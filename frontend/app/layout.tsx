@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Rajdhani } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import PageTransition from "./components/PageTransition";
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
@@ -41,13 +43,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${rajdhani.variable} antialiased`}>
         <AuthProvider>
-          <main className="background">
-            <Header />
-              <section className="content">
-                {children}
-              </section>
-            <Footer />
-          </main>
+          <ToastProvider>
+            <main className="background">
+              <Header />
+                <section className="content">
+                  <PageTransition>{children}</PageTransition>
+                </section>
+              <Footer />
+            </main>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

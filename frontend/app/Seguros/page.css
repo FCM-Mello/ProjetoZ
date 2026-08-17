@@ -96,6 +96,12 @@
     cursor: pointer;
 }
 
+.seguroCardSkeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .seguroCard-ativo {
     border-color: var(--color-info);
     box-shadow: 0 0 0 1px rgba(56,189,248,.35);

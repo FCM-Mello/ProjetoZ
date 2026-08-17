@@ -150,3 +150,29 @@ h1, h2, h3, h4{
         font-size:14px;
     }
 }
+
+/* Micro-interação de press — aplica em qualquer <button> do site. Não
+   força transition nos que já declaram a própria (ex: `transition:.2s`
+   nos cards), pra não brigar com a duração que cada tela já escolheu. */
+button{
+    transition: transform .12s ease;
+}
+
+button:not(:disabled):active{
+    transform: scale(.97);
+}
+
+/* Scroll-reveal — usado via useScrollReveal. O elemento começa oculto só
+   quando animação é permitida; com prefers-reduced-motion, já nasce visível. */
+@media (prefers-reduced-motion: no-preference){
+    .reveal{
+        opacity:0;
+        transform:translateY(18px);
+        transition:opacity .5s ease, transform .5s ease;
+    }
+
+    .reveal.in-view{
+        opacity:1;
+        transform:translateY(0);
+    }
+}

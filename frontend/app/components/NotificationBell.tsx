@@ -11,7 +11,9 @@ const INTERVALO_ATUALIZACAO_MS = 60_000;
 export default function NotificationBell() {
     const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
     const [aberto, setAberto] = useState(false);
+    const [pingando, setPingando] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const naoLidasAnteriorRef = useRef(0);
 
     useClickOutside(menuRef, () => setAberto(false));
 
@@ -30,6 +32,20 @@ export default function NotificationBell() {
     }, []);
 
     const naoLidas = notificacoes.filter(n => !n.lida).length;
+
+    // Só "pinga" quando o número de não lidas SOBE (notificação nova chegando
+    // no polling) — marcar como lida também muda naoLidas, mas pra baixo, e
+    // isso não deve disparar o ping.
+    useEffect(() => {
+        if (naoLidas > naoLidasAnteriorRef.current) {
+            setPingando(true);
+            const timeout = setTimeout(() => setPingando(false), 700);
+            naoLidasAnteriorRef.current = naoLidas;
+            return () => clearTimeout(timeout);
+        }
+
+        naoLidasAnteriorRef.current = naoLidas;
+    }, [naoLidas]);
 
     async function abrirNotificacao(notificacao: Notificacao) {
         if (!notificacao.lida) {
@@ -59,7 +75,11 @@ export default function NotificationBell() {
         <div className="notificationBell" ref={menuRef}>
             <button className="notificationBellBotao" onClick={() => setAberto(a => !a)} title="Notificações">
                 🔔
-                {naoLidas > 0 && <span className="notificationBellBadge">{naoLidas > 9 ? "9+" : naoLidas}</span>}
+                {naoLidas > 0 && (
+                    <span className={`notificationBellBadge ${pingando ? "notificationBellBadge-ping" : ""}`}>
+                        {naoLidas > 9 ? "9+" : naoLidas}
+                    </span>
+                )}
             </button>
 
             {aberto && (

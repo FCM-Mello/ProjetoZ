@@ -2,6 +2,7 @@
 
 import type { MouseEvent } from "react";
 import { Product } from "../../models/Product";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 import "../css/produtoGrid.css";
 
 interface Props {
@@ -25,16 +26,19 @@ export default function ProdutoGrid({
     onCriar,
     onComprar,
 }: Props) {
+    const gridRef = useScrollReveal<HTMLDivElement>(produtos.length);
+
     return (
-        <div className="grid-produtos">
-            {produtos.map(produto => {
+        <div className="grid-produtos" ref={gridRef}>
+            {produtos.map((produto, i) => {
 
                 const selected = selectedProducts.includes(produto.id);
 
                 return (
                     <div
                         key={produto.id}
-                        className={`card ${deleteMode && selected ? "selected" : ""}`}
+                        className={`card reveal ${deleteMode && selected ? "selected" : ""}`}
+                        style={{ transitionDelay: `${Math.min(i, 8) * 45}ms` }}
                         onClick={() => {
                             if (deleteMode) {
                                 onToggleSelecionado(produto.id);

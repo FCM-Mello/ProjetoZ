@@ -3,6 +3,7 @@
 import { useRef, useState, type DragEvent } from "react";
 import { Product } from "../models/Product";
 import { Category } from "../models/Category";
+import { useToast } from "../contexts/ToastContext";
 import "./Modal.css";
 
 const TAMANHO_MAXIMO_BYTES = 2 * 1024 * 1024; // 2MB
@@ -24,6 +25,7 @@ export default function ProductModal({ product, categorias, onClose, onSave }: P
     const [categoria, setCategoria] = useState(product?.categoria ?? "");
     const [arrastando, setArrastando] = useState(false);
 
+    const { erro: mostrarErro } = useToast();
     const inputArquivoRef = useRef<HTMLInputElement>(null);
 
     const editando = !!product;
@@ -41,12 +43,12 @@ export default function ProductModal({ product, categorias, onClose, onSave }: P
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Selecione um arquivo de imagem.");
+            mostrarErro("Selecione um arquivo de imagem.");
             return;
         }
 
         if (file.size > TAMANHO_MAXIMO_BYTES) {
-            alert("Imagem muito grande. Tamanho máximo: 2MB.");
+            mostrarErro("Imagem muito grande. Tamanho máximo: 2MB.");
             return;
         }
 
@@ -55,7 +57,7 @@ export default function ProductModal({ product, categorias, onClose, onSave }: P
             setImagem(base64);
         } catch (e) {
             console.error(e);
-            alert("Não foi possível ler a imagem.");
+            mostrarErro("Não foi possível ler a imagem.");
         }
     }
 

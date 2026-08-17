@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getMeusSeguros, SeguroAtivo } from "../services/segurosApi";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import MapaLeaflet from "./components/MapaLeaflet";
+import Skeleton from "../components/Skeleton";
 import "./page.css";
 
 function formatarData(data: string) {
@@ -50,7 +51,23 @@ export default function Seguros() {
                 pelo servidor a cada ~15 minutos. Arraste pra mover o mapa e role o mouse pra dar zoom.
             </p>
 
-            {carregando && <p className="segurosEstado">Carregando...</p>}
+            {carregando && (
+                <div className="segurosLayout">
+                    <div className="mapaWrapper">
+                        <Skeleton height="100%" borderRadius={14} />
+                    </div>
+
+                    <div className="segurosLista">
+                        {[0, 1, 2].map(i => (
+                            <div key={i} className="seguroCard seguroCardSkeleton">
+                                <Skeleton width="60%" height={16} />
+                                <Skeleton width="40%" height={12} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {erro && <p className="segurosEstado segurosEstado-erro">{erro}</p>}
 
             {!carregando && !erro && seguros.length === 0 && (

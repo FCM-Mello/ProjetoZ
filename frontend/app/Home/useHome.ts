@@ -6,6 +6,7 @@ import { getCategories, createCategory, deleteCategory } from "../services/categ
 import { Product } from "../models/Product";
 import { Category } from "../models/Category";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { ContextMenuState } from "./types";
 
@@ -32,6 +33,7 @@ export function useHome() {
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
     const { user, refreshUser } = useAuth();
+    const { sucesso, erro: mostrarErro } = useToast();
     const isAdmin = user?.isAdmin ?? false;
 
     useRequireAuth();
@@ -61,15 +63,15 @@ export function useHome() {
         try {
             if (editingProduct) {
                 await updateProduct(editingProduct.id, product);
-                alert("Produto atualizado!");
+                sucesso("Produto atualizado.");
             } else {
                 await createProduct(product);
-                alert("Produto cadastrado!");
+                sucesso("Produto cadastrado.");
             }
             carregarProdutos();
         } catch (e) {
             console.error(e);
-            alert("Erro ao salvar.");
+            mostrarErro("Erro ao salvar.");
         } finally {
             setEditingProduct(null);
         }
@@ -78,11 +80,11 @@ export function useHome() {
     async function salvarCategoria(category: Category) {
         try {
             await createCategory(category);
-            alert("Categoria cadastrada!");
+            sucesso("Categoria cadastrada.");
             carregarCategorias();
         } catch (e) {
             console.error(e);
-            alert("Erro ao cadastrar categoria.");
+            mostrarErro("Erro ao cadastrar categoria.");
         }
     }
 
@@ -190,11 +192,11 @@ export function useHome() {
                 resultadosCategorias.some(r => r.status === "rejected");
 
             if (houveFalha) {
-                alert("Não foi possível excluir um ou mais itens (podem estar em uso).");
+                mostrarErro("Não foi possível excluir um ou mais itens (podem estar em uso).");
             }
         } catch (error) {
             console.error("Erro ao excluir:", error);
-            alert("Não foi possível excluir um ou mais itens (podem estar em uso).");
+            mostrarErro("Não foi possível excluir um ou mais itens (podem estar em uso).");
         }
     }
 
@@ -202,10 +204,10 @@ export function useHome() {
         try {
             await purchaseProduct(produto.id);
             await refreshUser();
-            alert(`Você comprou ${produto.nome}!`);
+            sucesso(`Você comprou ${produto.nome}.`);
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "Não foi possível comprar o produto.");
+            mostrarErro(e instanceof Error ? e.message : "Não foi possível comprar o produto.");
         }
     }
 

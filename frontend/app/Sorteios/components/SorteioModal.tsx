@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Product } from "../../models/Product";
 import { VipTier } from "../../models/VipTier";
 import { CreateSorteioRequest } from "../../models/Sorteio";
+import { useToast } from "../../contexts/ToastContext";
 import "../../components/Modal.css";
 import "./SorteioModal.css";
 
@@ -19,6 +20,7 @@ export default function SorteioModal({ produtos, vipTiers, onClose, onSave }: Pr
     const [descricao, setDescricao] = useState("");
     const [premioVipNivel, setPremioVipNivel] = useState<number | null>(null);
     const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
+    const { erro: mostrarErro } = useToast();
 
     function toggleProduto(id: string) {
         setProdutosSelecionados(prev =>
@@ -30,7 +32,7 @@ export default function SorteioModal({ produtos, vipTiers, onClose, onSave }: Pr
         if (!titulo.trim()) return;
 
         if (premioVipNivel === null && produtosSelecionados.length === 0) {
-            alert("Escolha ao menos um prêmio: um nível de VIP ou um ou mais produtos.");
+            mostrarErro("Escolha ao menos um prêmio: um nível de VIP ou um ou mais produtos.");
             return;
         }
 

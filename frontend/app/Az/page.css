@@ -43,6 +43,57 @@
     pointer-events:none;
 }
 
+@media (prefers-reduced-motion: no-preference){
+    .azVaultGlow{
+        animation: az-vault-breathe 5.5s ease-in-out infinite;
+    }
+}
+
+@keyframes az-vault-breathe{
+    0%,100%{ opacity:.65; transform:translateX(-50%) scale(.95); }
+    50%{ opacity:1; transform:translateX(-50%) scale(1.06); }
+}
+
+.coinParticula{
+    position:absolute;
+    font-size:16px;
+    pointer-events:none;
+    opacity:0;
+}
+
+@media (prefers-reduced-motion: no-preference){
+    .coinParticula{
+        animation: coin-particula-voo .8s cubic-bezier(.15,.7,.3,1) forwards;
+    }
+}
+
+@keyframes coin-particula-voo{
+    0%{ opacity:0; transform:translate(0,0) scale(.5) rotate(0deg); }
+    15%{ opacity:1; }
+    100%{ opacity:0; transform:translate(var(--dx,0px), var(--dy,-80px)) scale(1) rotate(var(--rot,180deg)); }
+}
+
+.confetePedaco{
+    position:absolute;
+    top:-6%;
+    width:7px;
+    height:12px;
+    border-radius:2px;
+    opacity:0;
+}
+
+@media (prefers-reduced-motion: no-preference){
+    .confetePedaco{
+        animation: az-confete-cai var(--dur,2.2s) ease-in var(--delay,0s) forwards;
+    }
+}
+
+@keyframes az-confete-cai{
+    0%{ opacity:0; transform:translate(0,0) rotate(0deg); }
+    8%{ opacity:1; }
+    100%{ opacity:0; transform:translate(var(--dx,0px), 260px) rotate(var(--rot,380deg)); }
+}
+
 .azVault .section-title{
     border-left:none;
 
@@ -192,6 +243,34 @@
     letter-spacing:.04em;
 
     transform: rotate(45deg);
+
+    overflow:hidden;
+}
+
+.pacote-badge::after{
+    content:"";
+
+    position:absolute;
+    top:0;
+    left:-60%;
+
+    width:40%;
+    height:100%;
+
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,.85), transparent);
+    transform: skewX(-20deg);
+}
+
+@media (prefers-reduced-motion: no-preference){
+    .pacote-badge::after{
+        animation: pacote-badge-brilho 4.5s ease-in-out infinite;
+    }
+}
+
+@keyframes pacote-badge-brilho{
+    0%,60%{ left:-60%; }
+    85%{ left:130%; }
+    100%{ left:130%; }
 }
 
 .pacote-medalha{
@@ -207,6 +286,22 @@
     background: radial-gradient(circle at 35% 30%, #fff5d6, #ffd166 45%, #b8860b 100%);
 
     box-shadow: 0 0 0 3px rgba(255,209,102,.15), 0 8px 18px rgba(0,0,0,.4);
+}
+
+@media (prefers-reduced-motion: no-preference){
+    .pacote-medalha{
+        animation: pacote-medalha-flutua 3.6s ease-in-out infinite;
+    }
+
+    .pacote-bronze .pacote-medalha{ animation-delay: 0ms; }
+    .pacote-prata .pacote-medalha{ animation-delay: 150ms; }
+    .pacote-ouro .pacote-medalha{ animation-delay: 300ms; }
+    .pacote-platina .pacote-medalha{ animation-delay: 450ms; }
+}
+
+@keyframes pacote-medalha-flutua{
+    0%,100%{ transform: translateY(0) rotate(-2deg); }
+    50%{ transform: translateY(-5px) rotate(2deg); }
 }
 
 .pacote-medalha-icone{

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 import { getClipes, criarClipe, curtirClipe, excluirClipe } from "../services/clipesApi";
 import { vincularYoutube, desvincularYoutube } from "../services/authApi";
 import Link from "next/link";
@@ -28,6 +29,7 @@ export default function Clipes() {
     const [excluindo, setExcluindo] = useState<string | null>(null);
     const [desvinculando, setDesvinculando] = useState(false);
     const [mensagem, setMensagem] = useState<{ tipo: "sucesso" | "erro"; texto: string } | null>(null);
+    const listaRef = useScrollReveal<HTMLDivElement>(clipes.length);
 
     useEffect(() => {
         carregar();
@@ -211,12 +213,16 @@ export default function Clipes() {
                 <p className="clipesVazio">Nenhum clipe postado essa semana ainda.</p>
             )}
 
-            <div className="lista-clipes">
+            <div className="lista-clipes" ref={listaRef}>
                 {clipes.map((clipe, index) => {
                     const youtubeId = extrairYoutubeId(clipe.url);
 
                     return (
-                        <div key={clipe.id} className={`clipe-card ${index === 0 && clipe.curtidas > 0 ? "clipe-lider" : ""}`}>
+                        <div
+                            key={clipe.id}
+                            className={`clipe-card reveal ${index === 0 && clipe.curtidas > 0 ? "clipe-lider" : ""}`}
+                            style={{ transitionDelay: `${Math.min(index, 8) * 45}ms` }}
+                        >
                             <div className="clipe-ranking">
                                 {index === 0 && clipe.curtidas > 0 ? "🏆" : `#${index + 1}`}
                             </div>

@@ -45,6 +45,30 @@
     color: var(--color-accent-strong);
 }
 
+/* AZ é a entrada de monetização — fica destacado em dourado sempre, não só
+   quando a página está ativa (que continua marcada pelo fundo de .active). */
+.navHeader a.navAzDestaque{
+    color: var(--color-coin);
+    text-shadow: 0 0 10px rgba(255,209,102,.4);
+}
+
+.navHeader a.navAzDestaque:hover,
+.navHeader a.navAzDestaque.active{
+    background-color: rgba(255,209,102,.16);
+    color: var(--color-coin);
+}
+
+@media (prefers-reduced-motion: no-preference){
+    .navHeader a.navAzDestaque{
+        animation: nav-az-pulsa 3.2s ease-in-out infinite;
+    }
+}
+
+@keyframes nav-az-pulsa{
+    0%,100%{ text-shadow: 0 0 8px rgba(255,209,102,.35); }
+    50%{ text-shadow: 0 0 14px rgba(255,209,102,.65); }
+}
+
 .containerHeader{
 
     position:relative;
