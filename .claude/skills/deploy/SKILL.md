@@ -13,21 +13,21 @@ Se o commit inclui uma migration nova do EF Core, ela **precisa** rodar contra o
 
 ## 1. Gerar o bundle da migration (só se houver migration nova)
 
-No terminal local, dentro de `backend/ProjetoZ.Api`:
+No terminal local, na **raiz de `backend`** (não dentro de `ProjetoZ.Api`) — assim o caminho local (`backend/efbundle-linux`) já bate com o destino no servidor (`~/ProjetoZ/backend/efbundle-linux`):
 
 ```bash
-cd backend/ProjetoZ.Api
-dotnet ef migrations bundle --self-contained -r linux-x64 --project ../ProjetoZ.Persistence --startup-project . -o efbundle-linux --force
+cd backend
+dotnet ef migrations bundle --self-contained -r linux-x64 --project ProjetoZ.Persistence --startup-project ProjetoZ.Api -o efbundle-linux --force
 ```
 
-Gera `backend/ProjetoZ.Api/efbundle-linux` (binário standalone, não precisa do SDK instalado no servidor). Esse arquivo é git-ignorado — nunca é commitado, sempre gerado localmente e copiado na hora.
+Gera `backend/efbundle-linux` (binário standalone, não precisa do SDK instalado no servidor). Esse arquivo é git-ignorado — nunca é commitado, sempre gerado localmente e copiado na hora.
 
 ## 2. Copiar o bundle pro servidor
 
 **Numa janela de terminal local separada — nunca de dentro da sessão SSH já aberta** (rodar `scp` dentro da sessão SSH tenta resolver o caminho `Z:\...` do Windows como se fosse um caminho do servidor Linux e falha com "Could not resolve hostname").
 
 ```bash
-scp Z:\ProjetoZ\backend\ProjetoZ.Api\efbundle-linux root@216.238.107.240:~/ProjetoZ/backend/
+scp Z:\ProjetoZ\backend\efbundle-linux root@216.238.107.240:~/ProjetoZ/backend/
 ```
 
 ## 3. No servidor (via SSH)
@@ -49,6 +49,7 @@ Se o servidor já tiver `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
 
 ## Coisas que já causaram incidente aqui
 
+- **Subir o container da API com código novo antes de rodar a migration** (ou pular o passo achando que "não tinha migration nova") derruba o site inteiro com `500` em qualquer endpoint que toque a tabela afetada — já aconteceu com `column u.Banido does not exist` depois de um `docker compose up -d --build` sem aplicar a migration pendente antes. Se isso acontecer, não precisa refazer o build: só rodar o bundle (`./backend/efbundle-linux --connection "..."`) no servidor resolve, o código já estava certo.
 - **Rodar `docker compose up -d --build` sem o `-f docker-compose.prod.yml`** reverte o nginx pro modo HTTP-only silenciosamente (perde HTTPS) porque o compose usa o `docker-compose.yml` base sozinho.
 - **Rotas fora de `/api/`** (como `/signin-steam`, `/signin-google` — os callbacks OAuth) precisam de um `location` próprio no nginx apontando pra API; se esquecer, cai no bloco geral que manda tudo pro frontend e dá 404. Isso já aconteceu com o Google OAuth (ver commit `fb3a953`).
 - Variáveis de ambiente novas (ex: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_YOUTUBE_API_KEY`) precisam ser adicionadas manualmente no `.env` do servidor — elas não vêm do `git pull`, o `.env` é git-ignorado por design (contém segredo real).
