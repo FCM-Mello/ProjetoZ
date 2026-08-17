@@ -10,6 +10,13 @@ namespace ProjetoZ.Application.DTOs
         // com o Id do registro de seguro, que é gerado aqui e devolvido
         // na resposta como idSeguro.
         public string Id { get; set; } = string.Empty;
+
+        // Opcional — id do veículo específico no mundo do jogo. Se o mod já
+        // sabe qual veículo está sendo segurado no momento da compra, manda
+        // aqui e o vínculo é feito na hora, sem depender da sincronização de
+        // posição pra descobrir isso depois (que ainda funciona como
+        // fallback pra seguros criados sem esse campo).
+        public string? CarroId { get; set; }
     }
 
     public class ListaSegurosRequest
@@ -31,6 +38,12 @@ namespace ProjetoZ.Application.DTOs
         // manda true pra pular o cooldown. Só o servidor do mod envia isso —
         // o cliente do jogo não fala direto com essa API.
         public bool Pago { get; set; }
+
+        // Opcional — o resgate recria o veículo no jogo, então o CarroId
+        // antigo deixa de existir e o mod manda o novo aqui pra manter o
+        // vínculo (senão a sincronização de posição só ia religar sozinha
+        // no próximo lote, e o seguro ficaria "sem carro" até lá).
+        public string? CarroId { get; set; }
     }
 
     public class SeguroDto

@@ -87,8 +87,11 @@ Seguro dura **1 mês** a partir da criação. Cobre normalmente veículos, mas o
 Registra um seguro novo.
 
 ```json
-// request
+// request (sem vincular veículo ainda)
 { "apiKey": "...", "steamId": "76561198886359962", "id": "carro" }
+
+// request (já sabendo o veículo específico)
+{ "apiKey": "...", "steamId": "76561198886359962", "id": "carro", "carroId": "2011680-906255" }
 
 // response 200
 { "idSeguro": "0876959b-78e3-4386-81c3-66b9be1d0869" }
@@ -96,7 +99,8 @@ Registra um seguro novo.
 
 - `id` é o id do item no catálogo do mod (ex: `"carro"`), **não** confundir com `idSeguro` (gerado pelo site, identifica esse registro específico).
 - Cada chamada cria um seguro novo — o mesmo jogador pode ter vários seguros do mesmo `id` (ex: 3 carros = 3 chamadas = 3 seguros independentes, cada um com seu próprio cooldown de resgate).
-- Esse endpoint **não** recebe qual veículo específico está sendo segurado — só o tipo do item. O vínculo com um veículo concreto acontece depois, via `/veiculos/posicao` (abaixo).
+- `carroId` é **opcional**. Se o mod já sabe qual veículo específico está sendo segurado no momento da compra, pode mandar aqui e o vínculo é feito na hora — sem isso, o vínculo só acontece depois, via `/veiculos/posicao` (sincronização de posição, abaixo).
+- `400 "Esse veículo já tem um seguro ativo."` se o `carroId` informado já está vinculado a outro seguro ainda ativo (não expirado) de qualquer jogador. Um `carroId` que só aparece em seguros **expirados** pode ser reusado normalmente.
 - `400` se `id` vazio. `404` se `steamId` desconhecido.
 
 ### `POST /api/game/seguros`
@@ -133,15 +137,19 @@ Marca um seguro como resgatado agora.
 // request (resgate expresso, pula cooldown)
 { "apiKey": "...", "steamId": "76561198886359962", "idSeguro": "0876959b-...", "pago": true }
 
-// response 200 (nos dois casos)
+// request (resgate que recria o veículo com um id novo no jogo)
+{ "apiKey": "...", "steamId": "76561198886359962", "idSeguro": "0876959b-...", "carroId": "2011680-906999" }
+
+// response 200 (em todos os casos)
 { "proximoResgateEm": "2026-08-18T04:59:23Z" }
 ```
 
 - `pago` ausente ou `false` → comportamento normal: `400` se ainda dentro das 48h de cooldown.
 - `pago: true` → **pula a checagem de cooldown** e resgata na hora. Só o servidor do mod deve mandar isso — normalmente depois de já ter debitado 500 coins via `/api/game/comprar` com `itemId: "resgate_expresso"` (ver fluxo completo abaixo).
-- `400 "Esse seguro expirou."` em qualquer um dos dois casos se `ExpiraEm` já passou — resgate expresso **não** revive um seguro vencido.
+- `carroId` é **opcional**. Se o resgate recria o veículo no jogo com um id novo, manda aqui pra atualizar o vínculo na hora (senão o seguro fica "sem carro" até a próxima sincronização de posição). Mesma checagem de `400 "Esse veículo já tem um seguro ativo."` se o novo `carroId` já está em uso por outro seguro ativo.
+- `400 "Esse seguro expirou."` em qualquer um dos casos se `ExpiraEm` já passou — resgate expresso **não** revive um seguro vencido.
 - `404` se `idSeguro` não existe ou não pertence ao `steamId` informado.
-- Nos dois casos, `UltimoResgate` é atualizado pra agora — o próximo resgate grátis (sem pagar) só libera depois de mais 48h a partir desse resgate, mesmo que ele tenha sido o expresso.
+- Em todos os casos, `UltimoResgate` é atualizado pra agora — o próximo resgate grátis (sem pagar) só libera depois de mais 48h a partir desse resgate, mesmo que ele tenha sido o expresso.
 
 **Fluxo recomendado do resgate expresso** (mod já implementa assim):
 1. Jogador clica "Resgatar agora — 500 AZCoins".

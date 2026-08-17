@@ -237,6 +237,23 @@ public class GameController : ControllerBase
 
         var agora = DateTime.UtcNow;
 
+        // Opcional — quando o mod já sabe qual veículo está sendo segurado
+        // na hora da compra, vincula direto em vez de esperar a próxima
+        // sincronização de posição. Só barra se outro seguro AINDA ATIVO já
+        // usa esse CarroId — um seguro expirado antigo com o mesmo CarroId
+        // não conta, senão o veículo nunca poderia ser resegurado.
+        string? carroId = null;
+        if (!string.IsNullOrWhiteSpace(request.CarroId))
+        {
+            carroId = request.CarroId.Trim();
+
+            var carroJaSegurado = await _context.Seguros
+                .AnyAsync(s => s.CarroId == carroId && s.ExpiraEm > agora);
+
+            if (carroJaSegurado)
+                return BadRequest("Esse veículo já tem um seguro ativo.");
+        }
+
         var seguro = new Seguro
         {
             Id = Guid.NewGuid(),
@@ -244,6 +261,7 @@ public class GameController : ControllerBase
             ItemId = request.Id.Trim(),
             CriadoEm = agora,
             ExpiraEm = agora.AddMonths(MesesDuracaoSeguro),
+            CarroId = carroId,
         };
 
         _context.Seguros.Add(seguro);
@@ -326,6 +344,23 @@ public class GameController : ControllerBase
         if (seguro.ExpiraEm <= agora)
             return BadRequest("Esse seguro expirou.");
 
+        // Opcional — o resgate recria o veículo no jogo com um CarroId novo,
+        // então o mod manda o novo valor aqui pra manter o vínculo (senão o
+        // seguro fica "sem carro" até a próxima sincronização de posição).
+        // Mesma checagem de unicidade da criação, só que ignorando o próprio
+        // seguro (ele já pode ser o dono do CarroId antigo).
+        string? novoCarroId = null;
+        if (!string.IsNullOrWhiteSpace(request.CarroId))
+        {
+            novoCarroId = request.CarroId.Trim();
+
+            var carroJaSeguradoAltrove = await _context.Seguros
+                .AnyAsync(s => s.Id != seguro.Id && s.CarroId == novoCarroId && s.ExpiraEm > agora);
+
+            if (carroJaSeguradoAltrove)
+                return BadRequest("Esse veículo já tem um seguro ativo.");
+        }
+
         var limite = agora.AddHours(-HorasCooldownResgate);
 
         // UPDATE condicional em vez de ler-checar-salvar: se o mod disparar
@@ -337,8 +372,16 @@ public class GameController : ControllerBase
         if (!request.Pago)
             atualizacao = atualizacao.Where(s => s.UltimoResgate == null || s.UltimoResgate <= limite);
 
-        var linhasAfetadas = await atualizacao
-            .ExecuteUpdateAsync(sp => sp.SetProperty(s => s.UltimoResgate, agora));
+        // ExecuteUpdateAsync só aceita uma árvore de expressão (sem corpo em
+        // bloco), então a ramificação de ter ou não um novo CarroId precisa
+        // escolher entre duas chamadas inteiras, não montar uma condicional
+        // dentro da lambda.
+        var linhasAfetadas = novoCarroId != null
+            ? await atualizacao.ExecuteUpdateAsync(sp => sp
+                .SetProperty(s => s.UltimoResgate, agora)
+                .SetProperty(s => s.CarroId, novoCarroId))
+            : await atualizacao.ExecuteUpdateAsync(sp => sp
+                .SetProperty(s => s.UltimoResgate, agora));
 
         if (linhasAfetadas == 0)
             return request.Pago

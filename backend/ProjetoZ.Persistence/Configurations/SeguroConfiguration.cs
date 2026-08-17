@@ -14,10 +14,14 @@ namespace ProjetoZ.Persistence.Configurations
 
             builder.Property(s => s.ItemId).HasMaxLength(100);
 
-            // Postgres permite múltiplos NULLs num índice único — só passa a
-            // impedir duplicidade depois que um CarroId é de fato atribuído
-            // pela sincronização de posição.
-            builder.HasIndex(s => s.CarroId).IsUnique();
+            // Não é único no banco — um CarroId único "pra sempre" impediria
+            // segurar de novo o mesmo veículo depois que o seguro anterior
+            // expira (a linha antiga continua existindo, só marcada como
+            // expirada). A unicidade que importa é só "entre seguros ainda
+            // ativos", que é checada na aplicação (GameController), não dá
+            // pra expressar isso num índice do Postgres porque a condição
+            // depende da hora atual.
+            builder.HasIndex(s => s.CarroId);
         }
     }
 }

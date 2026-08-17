@@ -45,7 +45,7 @@ public class GameSeguroTests : IDisposable
         return user;
     }
 
-    private Seguro CriarSeguro(Guid userId, string itemId, DateTime? ultimoResgate)
+    private Seguro CriarSeguro(Guid userId, string itemId, DateTime? ultimoResgate, string? carroId = null, DateTime? expiraEm = null)
     {
         var seguro = new Seguro
         {
@@ -53,8 +53,9 @@ public class GameSeguroTests : IDisposable
             UserId = userId,
             ItemId = itemId,
             CriadoEm = DateTime.UtcNow,
-            ExpiraEm = DateTime.UtcNow.AddMonths(1),
+            ExpiraEm = expiraEm ?? DateTime.UtcNow.AddMonths(1),
             UltimoResgate = ultimoResgate,
+            CarroId = carroId,
         };
 
         _db.Context.Seguros.Add(seguro);
@@ -184,6 +185,65 @@ public class GameSeguroTests : IDisposable
 
         Assert.NotEqual(primeiro, segundo);
         Assert.Equal(2, await _db.Context.Seguros.CountAsync());
+    }
+
+    [Fact]
+    public async Task CriarSeguro_ComCarroId_VinculaNaHora()
+    {
+        CriarUsuario(SteamIdJogador);
+        var controller = CriarController();
+
+        var resultado = await controller.CriarSeguro(new CriarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            Id = "carro",
+            CarroId = "carro-123",
+        });
+
+        var idSeguro = IdSeguroDaResposta(resultado);
+
+        var gravado = await _db.Context.Seguros.FindAsync(idSeguro);
+        Assert.Equal("carro-123", gravado!.CarroId);
+    }
+
+    [Fact]
+    public async Task CriarSeguro_ComCarroIdJaAtivoEmOutroSeguro_RetornaBadRequestENaoCria()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        CriarSeguro(user.Id, "carro", ultimoResgate: null, carroId: "carro-123");
+        var controller = CriarController();
+
+        var resultado = await controller.CriarSeguro(new CriarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            Id = "carro",
+            CarroId = "carro-123",
+        });
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+        Assert.Equal(1, await _db.Context.Seguros.CountAsync());
+    }
+
+    [Fact]
+    public async Task CriarSeguro_ComCarroIdCujoUnicoDonoExpirou_Permite()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        CriarSeguro(user.Id, "carro", ultimoResgate: null, carroId: "carro-123", expiraEm: DateTime.UtcNow.AddDays(-1));
+        var controller = CriarController();
+
+        var resultado = await controller.CriarSeguro(new CriarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            Id = "carro",
+            CarroId = "carro-123",
+        });
+
+        var idSeguro = IdSeguroDaResposta(resultado);
+        var gravado = await _db.Context.Seguros.FindAsync(idSeguro);
+        Assert.Equal("carro-123", gravado!.CarroId);
     }
 
     [Fact]
@@ -471,6 +531,54 @@ public class GameSeguroTests : IDisposable
         });
 
         Assert.IsType<UnauthorizedResult>(resultado);
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_ComNovoCarroId_AtualizaVinculo()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: null, carroId: "carro-antigo");
+        var controller = CriarController();
+
+        var resultado = await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            CarroId = "carro-novo",
+        });
+
+        Assert.IsType<OkObjectResult>(resultado);
+
+        _db.Context.ChangeTracker.Clear();
+
+        var atualizado = await _db.Context.Seguros.FindAsync(seguro.Id);
+        Assert.Equal("carro-novo", atualizado!.CarroId);
+    }
+
+    [Fact]
+    public async Task ResgatarSeguro_ComCarroIdJaAtivoEmOutroSeguro_RetornaBadRequestENaoAltera()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        var seguro = CriarSeguro(user.Id, "carro", ultimoResgate: null, carroId: "carro-antigo");
+        CriarSeguro(user.Id, "helicoptero", ultimoResgate: null, carroId: "carro-novo");
+        var controller = CriarController();
+
+        var resultado = await controller.ResgatarSeguro(new ResgatarSeguroRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+            IdSeguro = seguro.Id,
+            CarroId = "carro-novo",
+        });
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+
+        _db.Context.ChangeTracker.Clear();
+
+        var intacto = await _db.Context.Seguros.FindAsync(seguro.Id);
+        Assert.Equal("carro-antigo", intacto!.CarroId);
+        Assert.Null(intacto.UltimoResgate);
     }
 
     [Fact]
