@@ -4,10 +4,45 @@
     margin: 70px auto 40px;
 }
 
+.adminTabs {
+    display: flex;
+    gap: 4px;
+
+    margin-bottom: 25px;
+
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
+}
+
+.adminTab {
+    padding: 10px 18px;
+
+    border-bottom: 2px solid transparent;
+
+    color: var(--color-text-muted);
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+
+    transition: color .15s, border-color .15s;
+}
+
+.adminTab:hover {
+    color: var(--color-text);
+}
+
+.adminTab-ativa {
+    border-color: var(--color-accent);
+    color: var(--color-accent-strong);
+}
+
 .adminHeader {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 16px;
 
     margin-bottom: 25px;
@@ -129,28 +164,6 @@
 .badge-banido {
     background: rgba(239, 68, 68, .14);
     color: var(--color-danger-strong);
-}
-
-.adminLinkNotificacoes {
-    padding: 9px 16px;
-
-    border-radius: 8px;
-    border: 1px solid var(--color-border-strong);
-
-    color: var(--color-text);
-    text-decoration: none;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    white-space: nowrap;
-
-    transition: border-color .15s, color .15s;
-}
-
-.adminLinkNotificacoes:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent-strong);
 }
 
 @media (max-width: 640px) {

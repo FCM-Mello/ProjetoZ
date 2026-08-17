@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRequireAdmin } from "../hooks/useRequireAdmin";
 import { getUsuarios } from "../services/adminApi";
 import { getVipTiers } from "../services/vipApi";
 import { getProducts } from "../services/productsApi";
@@ -13,8 +11,6 @@ import UsuarioAdminModal from "./components/UsuarioAdminModal";
 import "./page.css";
 
 export default function Admin() {
-    useRequireAdmin();
-
     const [usuarios, setUsuarios] = useState<AdminUsuario[]>([]);
     const [vipTiers, setVipTiers] = useState<VipTier[]>([]);
     const [produtos, setProdutos] = useState<Product[]>([]);
@@ -50,12 +46,8 @@ export default function Admin() {
     }
 
     return (
-        <main className="containerAdmin">
+        <>
             <div className="adminHeader">
-                <h2 className="section-title">Administração</h2>
-
-                <Link href="/Admin/Notificacoes" className="adminLinkNotificacoes">Notificações</Link>
-
                 <input
                     className="adminBusca"
                     placeholder="Buscar por nome ou SteamID..."
@@ -110,6 +102,6 @@ export default function Admin() {
                     onChange={carregarUsuarios}
                 />
             )}
-        </main>
+        </>
     );
 }

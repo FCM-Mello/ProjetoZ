@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRequireAdmin } from "../../hooks/useRequireAdmin";
 import { getUsuarios } from "../../services/adminApi";
 import { criarNotificacao, getTodasNotificacoes, excluirNotificacao } from "../../services/notificacoesApi";
 import { AdminUsuario } from "../../models/AdminUsuario";
 import { NotificacaoAdmin, NivelNotificacao } from "../../models/Notificacao";
-import "../page.css";
 import "../components/UsuarioAdminModal.css";
 import "./page.css";
 
@@ -17,8 +15,6 @@ const NIVEIS: { valor: NivelNotificacao; nome: string }[] = [
 ];
 
 export default function AdminNotificacoes() {
-    useRequireAdmin();
-
     const [titulo, setTitulo] = useState("");
     const [mensagem, setMensagem] = useState("");
     const [nivel, setNivel] = useState<NivelNotificacao>("verde");
@@ -129,9 +125,7 @@ export default function AdminNotificacoes() {
     }
 
     return (
-        <main className="containerAdminNotificacoes">
-            <h2 className="section-title">Notificações</h2>
-
+        <div className="containerAdminNotificacoes">
             <div className="notificacaoForm">
                 {erro && <div className="admin-modal-erro">{erro}</div>}
                 {sucesso && <div className="notificacaoSucesso">{sucesso}</div>}
@@ -247,6 +241,6 @@ export default function AdminNotificacoes() {
                     ))}
                 </div>
             )}
-        </main>
+        </div>
     );
 }
