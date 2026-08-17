@@ -44,4 +44,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<NotificacaoDestinatario> NotificacaoDestinatarios => Set<NotificacaoDestinatario>();
 
     public DbSet<NotificacaoLeitura> NotificacaoLeituras => Set<NotificacaoLeitura>();
+
+    public DbSet<PlayerRanking> PlayerRankings => Set<PlayerRanking>();
 }

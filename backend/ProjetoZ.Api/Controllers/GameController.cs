@@ -406,6 +406,81 @@ public class GameController : ControllerBase
         return Ok(new { proximoResgateEm = agora.AddHours(HorasCooldownResgate) });
     }
 
+    // Sincroniza os totais absolutos de kills/deaths do jogador (o mod manda
+    // o total atual, não um incremento) — mesma convenção de
+    // SincronizarPosicoes pra veículos. Cria a linha de ranking na primeira
+    // sincronização desse jogador.
+    [HttpPost("ranking/kd")]
+    public async Task<IActionResult> SincronizarKd(SincronizarKdRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        if (request.Kills < 0 || request.Deaths < 0)
+            return BadRequest("Kills e Deaths não podem ser negativos.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        if (user == null)
+            return NotFound();
+
+        var ranking = await _context.PlayerRankings
+            .FirstOrDefaultAsync(r => r.UserId == user.Id);
+
+        if (ranking == null)
+        {
+            ranking = new PlayerRanking { Id = Guid.NewGuid(), UserId = user.Id };
+            _context.PlayerRankings.Add(ranking);
+        }
+
+        ranking.Kills = request.Kills;
+        ranking.Deaths = request.Deaths;
+        ranking.AtualizadoEm = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    // Chamado uma vez a cada conclusão do KOTH — soma 1 ao contador, ao
+    // contrário do K/D acima (que sincroniza um total absoluto). Também cria
+    // a linha de ranking na primeira conclusão desse jogador.
+    [HttpPost("ranking/koth")]
+    public async Task<IActionResult> RegistrarKoth(RegistrarKothRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        if (user == null)
+            return NotFound();
+
+        var ranking = await _context.PlayerRankings
+            .FirstOrDefaultAsync(r => r.UserId == user.Id);
+
+        if (ranking == null)
+        {
+            ranking = new PlayerRanking { Id = Guid.NewGuid(), UserId = user.Id };
+            _context.PlayerRankings.Add(ranking);
+        }
+
+        ranking.KothCompletados++;
+        ranking.AtualizadoEm = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { kothCompletados = ranking.KothCompletados });
+    }
+
     private bool ValidarApiKey(string? providedKey)
     {
         var apiKey = _configuration["GameServer:ApiKey"];

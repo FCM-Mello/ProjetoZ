@@ -190,6 +190,44 @@ Sincronização em lote da posição de todos os veículos segurados de todos os
 - `atualizados` no response conta quantos itens do lote resultaram em atualização real (vínculo novo ou posição atualizada em seguro já vinculado).
 - A posição sincronizada aparece pro jogador na página `/Seguros` do site, plotada sobre o mapa do Chernarus+.
 
+## Ranking global (K/D e KOTH)
+
+Alimenta a página `/Ranking` do site — cada jogador com pelo menos uma sincronização de K/D ou conclusão de KOTH aparece lá, ordenável por maior K/D ou mais KOTH completados. Não existe endpoint de listagem pro mod — quem lê o ranking é o site, autenticado por JWT (`GET /api/ranking`).
+
+### `POST /api/game/ranking/kd`
+
+Sincroniza os **totais absolutos** de kills/deaths do jogador — o mod manda o total atual, não um incremento (o valor novo **substitui** o antigo, igual à sincronização de posição de veículos).
+
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962", "kills": 42, "deaths": 7 }
+
+// response 200 (corpo vazio)
+```
+
+- `kills`/`deaths` não podem ser negativos (`400` se forem).
+- Cria a linha de ranking desse jogador na primeira sincronização.
+- `404` se `steamId` desconhecido.
+
+### `POST /api/game/ranking/koth`
+
+Chamado **uma vez a cada conclusão do KOTH** pelo jogador — soma 1 ao contador (ao contrário do K/D acima, que sincroniza um total, esse é incremental por chamada).
+
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
+
+// response 200
+{ "kothCompletados": 5 }
+```
+
+- Cria a linha de ranking desse jogador na primeira conclusão.
+- `404` se `steamId` desconhecido.
+
+### Reset (admin, site)
+
+`DELETE /api/ranking` (JWT, precisa ser admin) apaga **todos** os registros de ranking de uma vez — não existe reset por jogador individual. Usado pra zerar o placar no início de uma temporada, por exemplo.
+
 ## Resumo dos endpoints
 
 | Endpoint | Uso |
@@ -201,3 +239,5 @@ Sincronização em lote da posição de todos os veículos segurados de todos os
 | `POST /api/game/seguros` | Listar seguros ativos + estado do cooldown |
 | `POST /api/game/seguro/resgate` | Resgatar (normal ou expresso, `pago: true`) |
 | `POST /api/game/veiculos/posicao` | Sync em lote de posição de veículos segurados |
+| `POST /api/game/ranking/kd` | Sincronizar total absoluto de kills/deaths |
+| `POST /api/game/ranking/koth` | Somar 1 conclusão de KOTH |
