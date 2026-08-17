@@ -29,4 +29,13 @@ public class User
     public string? YoutubeChannelId { get; set; }
 
     public string? YoutubeChannelNome { get; set; }
+
+    // Banimento é permanente até um admin reverter (não é um timeout
+    // automático) — bloqueia login novo (AuthController.SteamCallback) e
+    // qualquer endpoint [Authorize] já autenticado (NotBannedAuthorizationHandler).
+    public bool Banido { get; set; } = false;
+
+    public string? BanidoMotivo { get; set; }
+
+    public DateTime? BanidoEm { get; set; }
 }

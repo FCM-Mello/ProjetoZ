@@ -123,3 +123,28 @@ export async function removerAdmin(id: string): Promise<AdminUsuario> {
 
     return response.json();
 }
+
+export async function banirUsuario(id: string, motivo?: string): Promise<AdminUsuario> {
+    const response = await fetch(`${API_URL}/usuarios/${id}/banir`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ motivo }),
+    });
+
+    if (!response.ok)
+        throw new Error(await response.text() || "Erro ao banir usuário");
+
+    return response.json();
+}
+
+export async function removerBan(id: string): Promise<AdminUsuario> {
+    const response = await fetch(`${API_URL}/usuarios/${id}/banir`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        throw new Error(await response.text() || "Erro ao remover banimento");
+
+    return response.json();
+}

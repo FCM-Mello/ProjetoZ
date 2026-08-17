@@ -91,10 +91,16 @@ namespace ProjetoZ.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            var token = _jwtService.Generate(user);
-
             var frontendUrl = _configuration["App:FrontendUrl"]
                 ?? throw new InvalidOperationException("App:FrontendUrl não configurado.");
+
+            // Bloqueia aqui pra nunca emitir um token novo pra conta banida —
+            // uma sessão já aberta antes do banimento é cortada à parte pelo
+            // NotBannedAuthorizationHandler no próximo request autenticado.
+            if (user.Banido)
+                return Redirect($"{frontendUrl}/Auth/Callback?erro=banido");
+
+            var token = _jwtService.Generate(user);
 
             return Redirect(
                 $"{frontendUrl}/Auth/Callback?token={Uri.EscapeDataString(token)}");

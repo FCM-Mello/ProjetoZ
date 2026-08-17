@@ -208,6 +208,51 @@ public class AdminController : ControllerBase
         return Ok(MapDto(user));
     }
 
+    // Mesmas duas proteções do RemoverAdmin acima — impede um admin de se
+    // trancar fora da própria conta e protege o dono do site de ser banido
+    // por outro admin (erro humano ou uso indevido do painel).
+    [HttpPost("usuarios/{id}/banir")]
+    public async Task<IActionResult> Banir(Guid id, BanirRequest request)
+    {
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null)
+            return NotFound();
+
+        if (user.Profile?.SteamId == SuperAdminSteamId)
+            return BadRequest("Esse usuário não pode ser banido.");
+
+        var meuId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (meuId != null && Guid.TryParse(meuId, out var meuIdGuid) && meuIdGuid == id)
+            return BadRequest("Você não pode banir sua própria conta.");
+
+        user.Banido = true;
+        user.BanidoMotivo = string.IsNullOrWhiteSpace(request.Motivo) ? null : request.Motivo.Trim();
+        user.BanidoEm = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(MapDto(user));
+    }
+
+    [HttpDelete("usuarios/{id}/banir")]
+    public async Task<IActionResult> RemoverBan(Guid id)
+    {
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null)
+            return NotFound();
+
+        user.Banido = false;
+        user.BanidoMotivo = null;
+        user.BanidoEm = null;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(MapDto(user));
+    }
+
     private static AdminUsuarioDto MapDto(User user)
     {
         var vipNivel = VipTiers.NivelEfetivo(user.VipNivel, user.VipExpiraEm);
@@ -222,7 +267,9 @@ public class AdminController : ControllerBase
             VipNivel = vipNivel,
             VipNivelNome = vipNivel > 0 ? VipTiers.NomeDoNivel(vipNivel) : null,
             VipExpiraEm = vipNivel > 0 ? user.VipExpiraEm : null,
-            IsAdmin = user.IsAdmin
+            IsAdmin = user.IsAdmin,
+            Banido = user.Banido,
+            BanidoMotivo = user.BanidoMotivo
         };
     }
 
@@ -245,6 +292,37 @@ public class AdminController : ControllerBase
             })
             .ToList();
 
+        var seguros = await _context.Seguros
+            .Where(s => s.UserId == user.Id)
+            .OrderByDescending(s => s.CriadoEm)
+            .Select(s => new SeguroAtivoDto
+            {
+                IdSeguro = s.Id,
+                Id = s.ItemId,
+                ExpiraEm = s.ExpiraEm,
+                CarroId = s.CarroId,
+                VeiculoNome = s.VeiculoNome,
+                PosicaoGrid = s.PosicaoGrid,
+                PosicaoX = s.PosicaoX,
+                PosicaoZ = s.PosicaoZ,
+                PosicaoAtualizadaEm = s.PosicaoAtualizadaEm
+            })
+            .ToListAsync();
+
+        var compras = await _context.Compras
+            .Where(c => c.UserId == user.Id)
+            .OrderByDescending(c => c.CriadoEm)
+            .Take(20)
+            .Select(c => new AdminCompraDto
+            {
+                Tipo = c.Tipo,
+                Descricao = c.Descricao,
+                Coins = c.Coins,
+                ValorReais = c.ValorReais,
+                CriadoEm = c.CriadoEm
+            })
+            .ToListAsync();
+
         var dto = MapDto(user);
 
         return new AdminUsuarioDetalheDto
@@ -258,7 +336,11 @@ public class AdminController : ControllerBase
             VipNivelNome = dto.VipNivelNome,
             VipExpiraEm = dto.VipExpiraEm,
             IsAdmin = dto.IsAdmin,
-            Inventario = inventario
+            Banido = dto.Banido,
+            BanidoMotivo = dto.BanidoMotivo,
+            Inventario = inventario,
+            Seguros = seguros,
+            Compras = compras
         };
     }
 }

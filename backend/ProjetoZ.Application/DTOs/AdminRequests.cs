@@ -14,4 +14,9 @@ namespace ProjetoZ.Application.DTOs
     {
         public Guid ProdutoId { get; set; }
     }
+
+    public class BanirRequest
+    {
+        public string? Motivo { get; set; }
+    }
 }

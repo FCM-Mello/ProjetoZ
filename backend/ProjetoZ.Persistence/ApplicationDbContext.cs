@@ -38,4 +38,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<ClipeConfig> ClipeConfigs => Set<ClipeConfig>();
 
     public DbSet<Seguro> Seguros => Set<Seguro>();
+
+    public DbSet<Notificacao> Notificacoes => Set<Notificacao>();
+
+    public DbSet<NotificacaoDestinatario> NotificacaoDestinatarios => Set<NotificacaoDestinatario>();
+
+    public DbSet<NotificacaoLeitura> NotificacaoLeituras => Set<NotificacaoLeitura>();
 }

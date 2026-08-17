@@ -12,6 +12,8 @@ import {
     removerProduto,
     tornarAdmin,
     removerAdmin,
+    banirUsuario,
+    removerBan,
 } from "../../services/adminApi";
 import { AdminUsuarioDetalhe } from "../../models/AdminUsuario";
 import { VipTier } from "../../models/VipTier";
@@ -41,6 +43,7 @@ export default function UsuarioAdminModal({ usuarioId, vipTiers, produtos, onClo
     const [valorCoins, setValorCoins] = useState(0);
     const [nivelSelecionado, setNivelSelecionado] = useState<number>(vipTiers[0]?.nivel ?? 1);
     const [produtoSelecionado, setProdutoSelecionado] = useState<string>(produtos[0]?.id ?? "");
+    const [motivoBan, setMotivoBan] = useState("");
 
     const souEu = meuUsuario?.id === usuarioId;
     const protegido = souEu || usuario?.steamId === SUPER_ADMIN_STEAM_ID;
@@ -203,6 +206,78 @@ export default function UsuarioAdminModal({ usuarioId, vipTiers, produtos, onClo
                                     Adicionar
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="admin-secao">
+                            <h3>Seguros</h3>
+
+                            {usuario.seguros.length === 0 ? (
+                                <p className="admin-lista-vazia">Nenhum seguro.</p>
+                            ) : (
+                                <ul className="admin-lista-inventario">
+                                    {usuario.seguros.map(seguro => (
+                                        <li key={seguro.idSeguro}>
+                                            <span>
+                                                {seguro.veiculoNome || seguro.id} — expira em {formatarData(seguro.expiraEm)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        <div className="admin-secao">
+                            <h3>Histórico de compras</h3>
+
+                            {usuario.compras.length === 0 ? (
+                                <p className="admin-lista-vazia">Nenhuma compra.</p>
+                            ) : (
+                                <ul className="admin-lista-inventario">
+                                    {usuario.compras.map((compra, i) => (
+                                        <li key={i}>
+                                            <span>{compra.descricao} — {formatarData(compra.criadoEm)}</span>
+                                            {compra.coins !== 0 && <span>{compra.coins > 0 ? "+" : ""}{compra.coins} 🪙</span>}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        <div className="admin-secao">
+                            <h3>Banimento</h3>
+                            <p className="admin-valor-atual">
+                                {usuario.banido
+                                    ? `Banido${usuario.banidoMotivo ? ` — ${usuario.banidoMotivo}` : ""}`
+                                    : "Não banido"}
+                            </p>
+
+                            {usuario.banido ? (
+                                <div className="admin-linha">
+                                    <button
+                                        disabled={processando}
+                                        onClick={() => executar(() => removerBan(usuario.id))}
+                                    >
+                                        Remover banimento
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="admin-linha">
+                                    <input
+                                        type="text"
+                                        placeholder="Motivo (opcional)"
+                                        value={motivoBan}
+                                        onChange={(e) => setMotivoBan(e.target.value)}
+                                    />
+                                    <button
+                                        className="admin-btn-perigo"
+                                        disabled={processando || protegido}
+                                        title={protegido ? "Esse usuário não pode ser banido" : undefined}
+                                        onClick={() => executar(() => banirUsuario(usuario.id, motivoBan || undefined))}
+                                    >
+                                        Banir
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <div className="admin-secao">

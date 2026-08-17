@@ -8,6 +8,8 @@ export interface AdminUsuario {
     vipNivelNome: string | null;
     vipExpiraEm: string | null;
     isAdmin: boolean;
+    banido: boolean;
+    banidoMotivo: string | null;
 }
 
 export interface InventarioItem {
@@ -16,6 +18,24 @@ export interface InventarioItem {
     quantidade: number;
 }
 
+export interface AdminSeguro {
+    idSeguro: string;
+    id: string;
+    expiraEm: string;
+    carroId: string | null;
+    veiculoNome: string | null;
+}
+
+export interface AdminCompra {
+    tipo: string;
+    descricao: string;
+    coins: number;
+    valorReais: number | null;
+    criadoEm: string;
+}
+
 export interface AdminUsuarioDetalhe extends AdminUsuario {
     inventario: InventarioItem[];
+    seguros: AdminSeguro[];
+    compras: AdminCompra[];
 }

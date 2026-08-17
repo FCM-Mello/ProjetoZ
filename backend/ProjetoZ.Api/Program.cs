@@ -143,9 +143,17 @@ builder.Services.AddHostedService<FechamentoSemanalClipesService>();
 builder.Services.AddHostedService<ExpiracaoVipService>();
 
 builder.Services.AddScoped<IAuthorizationHandler, AdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, NotBannedAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Admin", policy => policy.Requirements.Add(new AdminRequirement()));
+    options.AddPolicy("Admin", policy => policy.AddRequirements(new AdminRequirement(), new NotBannedRequirement()));
+
+    // Aplicado a TODO endpoint [Authorize] do site (não só uma policy
+    // nomeada) — um usuário banido perde acesso na hora, sem precisar
+    // adicionar essa checagem em cada controller.
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(options.DefaultPolicy)
+        .AddRequirements(new NotBannedRequirement())
+        .Build();
 });
 
 var app = builder.Build();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRequireAdmin } from "../hooks/useRequireAdmin";
 import { getUsuarios } from "../services/adminApi";
 import { getVipTiers } from "../services/vipApi";
@@ -53,6 +54,8 @@ export default function Admin() {
             <div className="adminHeader">
                 <h2 className="section-title">Administração</h2>
 
+                <Link href="/Admin/Notificacoes" className="adminLinkNotificacoes">Notificações</Link>
+
                 <input
                     className="adminBusca"
                     placeholder="Buscar por nome ou SteamID..."
@@ -88,6 +91,10 @@ export default function Admin() {
 
                             {usuario.isAdmin && (
                                 <span className="badge-admin">Admin</span>
+                            )}
+
+                            {usuario.banido && (
+                                <span className="badge-banido">Banido</span>
                             )}
                         </div>
                     </div>

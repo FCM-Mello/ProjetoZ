@@ -35,8 +35,17 @@ export function AuthProvider({
             setLoading(false);
             return;
         }
-        
-        setUser(await getCurrentUser(token));
+
+        try {
+            setUser(await getCurrentUser(token));
+        } catch {
+            // Token inválido/expirado, ou conta banida (a checagem de
+            // banimento acontece no backend, em todo endpoint autenticado) —
+            // nos dois casos a sessão local não vale mais nada.
+            localStorage.removeItem("token");
+            setUser(null);
+        }
+
         setLoading(false);
     }
 

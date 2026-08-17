@@ -1,19 +1,10 @@
-"use client";
+import { Suspense } from "react";
+import LoginClient from "./LoginClient";
 
-import { loginSteam } from "../../services/authApi";
-
-export default function Login() {
-
+export default function Page() {
     return (
-        <div className="center-card">
-            <h2>ArkZ</h2>
-
-            <button
-                className="buttonConfirm"
-                onClick={loginSteam}
-            >
-                Entrar com Steam
-            </button>
-        </div>
+        <Suspense fallback={<p>Carregando...</p>}>
+            <LoginClient />
+        </Suspense>
     );
 }
