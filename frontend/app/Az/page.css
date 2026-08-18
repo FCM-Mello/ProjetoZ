@@ -1,6 +1,5 @@
 .containerAz {
-    width: 92%;
-    max-width: 1240px;
+    width: 70%;
     margin: 70px auto 40px;
 }
 
@@ -187,7 +186,7 @@
 .pacote-card{
     position:relative;
 
-    flex: 0 0 220px;
+    flex: 0 0 260px;
 
     display:flex;
     flex-direction:column;

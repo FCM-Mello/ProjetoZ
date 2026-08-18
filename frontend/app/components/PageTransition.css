@@ -1,3 +1,7 @@
+.pageTransition{
+    width: 100%;
+}
+
 @media (prefers-reduced-motion: no-preference){
     .pageTransition{
         animation: page-enter .35s ease both;
