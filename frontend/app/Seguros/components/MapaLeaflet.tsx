@@ -23,6 +23,12 @@ const MAX_ZOOM = 5;
 // preciso converter dividindo por essa escala antes de virar lat/lng.
 const ESCALA_ZOOM_MAX = 2 ** MAX_ZOOM;
 
+// Calibração empírica: um veículo observado na costa (Z baixo) aparecia
+// consistentemente ~2 quadrantes (2000m) mais ao norte no mapa do que a
+// posição real. Corrige deslocando o Z usado na conversão — se surgir mais
+// referência real (outro ponto conhecido), reajustar este valor.
+const AJUSTE_Z_METROS = 2000;
+
 const COR_MARCADOR = "#ff9f1c";
 const COR_MARCADOR_ATIVO = "#38bdf8";
 
@@ -44,8 +50,9 @@ interface MapaLeafletProps {
 // abaixo viram lat negativo (convenção padrão do Leaflet pra imagens onde Y
 // cresce pra baixo).
 function mundoParaLatLng(L: typeof LeafletTypes, x: number, z: number): LeafletTypes.LatLng {
+    const zAjustado = z - AJUSTE_Z_METROS;
     const pxX = ((x / TAMANHO_MUNDO_METROS) * TAMANHO_IMAGEM_PX) / ESCALA_ZOOM_MAX;
-    const pxYDoTopo = (TAMANHO_IMAGEM_PX - (z / TAMANHO_MUNDO_METROS) * TAMANHO_IMAGEM_PX) / ESCALA_ZOOM_MAX;
+    const pxYDoTopo = (TAMANHO_IMAGEM_PX - (zAjustado / TAMANHO_MUNDO_METROS) * TAMANHO_IMAGEM_PX) / ESCALA_ZOOM_MAX;
     return L.latLng(-pxYDoTopo, pxX);
 }
 
@@ -55,7 +62,7 @@ function latLngParaMundo(latlng: LeafletTypes.LatLng): { x: number; z: number } 
     const pxYDoTopo = -latlng.lat * ESCALA_ZOOM_MAX;
     return {
         x: (pxX / TAMANHO_IMAGEM_PX) * TAMANHO_MUNDO_METROS,
-        z: ((TAMANHO_IMAGEM_PX - pxYDoTopo) / TAMANHO_IMAGEM_PX) * TAMANHO_MUNDO_METROS,
+        z: ((TAMANHO_IMAGEM_PX - pxYDoTopo) / TAMANHO_IMAGEM_PX) * TAMANHO_MUNDO_METROS + AJUSTE_Z_METROS,
     };
 }
 
