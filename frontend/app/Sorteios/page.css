@@ -45,12 +45,6 @@
     background: var(--color-success-strong);
 }
 
-.sorteiosVazio{
-    color: var(--color-text-muted);
-    padding:40px 0;
-    text-align:center;
-}
-
 .lista-sorteios{
     display:flex;
     flex-direction:column;

@@ -145,12 +145,6 @@
     color: var(--color-danger-strong);
 }
 
-.clipesVazio {
-    color: var(--color-text-muted);
-    padding: 40px 0;
-    text-align: center;
-}
-
 .vencedorAnterior {
     position: relative;
 

@@ -8,6 +8,7 @@ import { AdminUsuario } from "../models/AdminUsuario";
 import { VipTier } from "../models/VipTier";
 import { Product } from "../models/Product";
 import UsuarioAdminModal from "./components/UsuarioAdminModal";
+import EstadoVazio from "../components/EstadoVazio";
 import "./page.css";
 
 export default function Admin() {
@@ -57,7 +58,11 @@ export default function Admin() {
             </div>
 
             {!carregando && usuarios.length === 0 && (
-                <p className="adminVazio">Nenhum usuário encontrado.</p>
+                <EstadoVazio
+                    icone="🔍"
+                    titulo="Nenhum usuário encontrado."
+                    descricao="Tente buscar por outro nome ou SteamID."
+                />
             )}
 
             <div className="lista-usuarios-admin">

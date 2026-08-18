@@ -7,6 +7,7 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 import { getRanking, resetarRanking } from "../services/rankingApi";
 import { RankingJogador } from "../models/Ranking";
 import Skeleton from "../components/Skeleton";
+import EstadoVazio from "../components/EstadoVazio";
 import "./page.css";
 
 type Criterio = "kd" | "koth";
@@ -89,7 +90,11 @@ export default function Ranking() {
             </div>
 
             {!carregando && ordenados.length === 0 && (
-                <p className="rankingVazio">Nenhum jogador no ranking ainda.</p>
+                <EstadoVazio
+                    icone="🏆"
+                    titulo="Nenhum jogador no ranking ainda."
+                    descricao="Assim que o mod sincronizar K/D ou KOTH, os jogadores aparecem aqui."
+                />
             )}
 
             {carregando && (

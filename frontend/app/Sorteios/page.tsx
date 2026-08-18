@@ -12,6 +12,7 @@ import { Sorteio, CreateSorteioRequest } from "../models/Sorteio";
 import { Product } from "../models/Product";
 import { VipTier } from "../models/VipTier";
 import SorteioModal from "./components/SorteioModal";
+import EstadoVazio from "../components/EstadoVazio";
 import "./page.css";
 
 export default function Sorteios() {
@@ -115,7 +116,11 @@ export default function Sorteios() {
             </div>
 
             {sorteios.length === 0 && (
-                <p className="sorteiosVazio">Nenhum sorteio disponível no momento.</p>
+                <EstadoVazio
+                    icone="🎟️"
+                    titulo="Nenhum sorteio disponível no momento."
+                    descricao="Fique de olho — novos sorteios aparecem aqui assim que forem criados."
+                />
             )}
 
             <div className="lista-sorteios" ref={listaRef}>

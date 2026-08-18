@@ -69,12 +69,6 @@
     border-color: var(--color-accent);
 }
 
-.adminVazio {
-    color: var(--color-text-muted);
-    padding: 40px 0;
-    text-align: center;
-}
-
 .lista-usuarios-admin {
     display: flex;
     flex-direction: column;

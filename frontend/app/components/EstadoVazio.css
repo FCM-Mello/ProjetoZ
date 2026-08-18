@@ -1,0 +1,67 @@
+.estadoVazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    padding: 48px 20px;
+
+    text-align: center;
+}
+
+.estadoVazioIcone {
+    font-size: 40px;
+    opacity: .55;
+    filter: grayscale(.3);
+}
+
+.estadoVazioTitulo {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.estadoVazioDescricao {
+    max-width: 320px;
+
+    color: var(--color-text-muted);
+    font-size: 12px;
+    opacity: .8;
+}
+
+.estadoVazioAcao {
+    margin-top: 6px;
+
+    padding: 8px 18px;
+
+    border-radius: 8px;
+
+    background: var(--color-accent);
+    color: #1a1004;
+
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 12px;
+    font-weight: 700;
+
+    transition: background .15s;
+}
+
+.estadoVazioAcao:hover {
+    background: var(--color-accent-strong);
+}
+
+.estadoVazio-compacto {
+    padding: 24px 16px;
+    gap: 4px;
+}
+
+.estadoVazio-compacto .estadoVazioIcone {
+    font-size: 24px;
+}
+
+.estadoVazio-compacto .estadoVazioTitulo {
+    font-size: 12px;
+    font-weight: 500;
+}

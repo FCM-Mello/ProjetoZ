@@ -75,12 +75,6 @@
     color: var(--color-accent-strong);
 }
 
-.rankingVazio {
-    color: var(--color-text-muted);
-    padding: 40px 0;
-    text-align: center;
-}
-
 .rankingLista {
     display: flex;
     flex-direction: column;

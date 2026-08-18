@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMinhasNotificacoes, marcarLida, marcarTodasLidas } from "../services/notificacoesApi";
 import { Notificacao } from "../models/Notificacao";
 import { useClickOutside } from "../hooks/useClickOutside";
+import EstadoVazio from "./EstadoVazio";
 import "./NotificationBell.css";
 
 const INTERVALO_ATUALIZACAO_MS = 60_000;
@@ -94,7 +95,7 @@ export default function NotificationBell() {
                     </div>
 
                     {notificacoes.length === 0 ? (
-                        <p className="notificationVazio">Nenhuma notificação.</p>
+                        <EstadoVazio icone="🔔" titulo="Nenhuma notificação." compacto />
                     ) : (
                         <ul className="notificationLista">
                             {notificacoes.map(n => (

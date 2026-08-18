@@ -6,6 +6,7 @@ import { useRequireAuth } from "../hooks/useRequireAuth";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import { Compra } from "../models/Compra";
 import Skeleton from "../components/Skeleton";
+import EstadoVazio from "../components/EstadoVazio";
 import "./page.css";
 
 const ROTULOS_TIPO: Record<Compra["tipo"], string> = {
@@ -54,7 +55,12 @@ export default function Historico() {
             <h2 className="section-title">Histórico de Compras</h2>
 
             {!carregando && compras.length === 0 && (
-                <p className="historicoVazio">Você ainda não fez nenhuma compra.</p>
+                <EstadoVazio
+                    icone="🧾"
+                    titulo="Você ainda não fez nenhuma compra."
+                    acaoLabel="Ver loja"
+                    acaoHref="/Home"
+                />
             )}
 
             {carregando && (

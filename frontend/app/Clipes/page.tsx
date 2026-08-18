@@ -9,6 +9,7 @@ import { vincularYoutube, desvincularYoutube } from "../services/authApi";
 import Link from "next/link";
 import { Clipe, ClipeVencedor, CreateClipeRequest } from "../models/Clipe";
 import ClipeModal from "./components/ClipeModal";
+import EstadoVazio from "../components/EstadoVazio";
 import "./page.css";
 
 function extrairYoutubeId(url: string): string | null {
@@ -210,7 +211,11 @@ export default function Clipes() {
             )}
 
             {clipes.length === 0 && (
-                <p className="clipesVazio">Nenhum clipe postado essa semana ainda.</p>
+                <EstadoVazio
+                    icone="🎬"
+                    titulo="Nenhum clipe postado essa semana ainda."
+                    descricao="Seja o primeiro a postar e concorrer aos 500 Az Coins do vencedor."
+                />
             )}
 
             <div className="lista-clipes" ref={listaRef}>
