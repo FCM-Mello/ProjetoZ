@@ -269,6 +269,44 @@ public class GameSeguroTests : IDisposable
     }
 
     [Fact]
+    public async Task GetSeguros_ComCarroIdVinculado_RetornaCarroId()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        CriarSeguro(user.Id, "carro", ultimoResgate: null, carroId: "carro-123");
+        var controller = CriarController();
+
+        var resultado = await controller.GetSeguros(new ListaSegurosRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+        });
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var seguro = Assert.Single(Assert.IsAssignableFrom<List<SeguroDto>>(ok.Value));
+
+        Assert.Equal("carro-123", seguro.CarroId);
+    }
+
+    [Fact]
+    public async Task GetSeguros_SemCarroIdVinculado_RetornaCarroIdNulo()
+    {
+        var user = CriarUsuario(SteamIdJogador);
+        CriarSeguro(user.Id, "carro", ultimoResgate: null);
+        var controller = CriarController();
+
+        var resultado = await controller.GetSeguros(new ListaSegurosRequest
+        {
+            ApiKey = ApiKeyValida,
+            SteamId = SteamIdJogador,
+        });
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var seguro = Assert.Single(Assert.IsAssignableFrom<List<SeguroDto>>(ok.Value));
+
+        Assert.Null(seguro.CarroId);
+    }
+
+    [Fact]
     public async Task GetSeguros_ResgatadoHaMenosDe48h_NaoPodeResgatarEInformaQuando()
     {
         var user = CriarUsuario(SteamIdJogador);

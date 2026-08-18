@@ -117,13 +117,15 @@ Lista os seguros **ativos** (não expirados) de um jogador, com o estado do cool
     "idSeguro": "0876959b-...",
     "id": "carro",
     "podeResgatar": false,
-    "proximoResgateEm": "2026-08-18T04:59:23Z"
+    "proximoResgateEm": "2026-08-18T04:59:23Z",
+    "carroId": "2011680-906999"
   }
 ]
 ```
 
 - Seguro expirado (`ExpiraEm` no passado) **não aparece nessa lista**.
 - `podeResgatar: true` → `proximoResgateEm` vem `null`.
+- `carroId` vem `null` até a sincronização de posição religar o vínculo (ou até o mod mandar na criação/resgate do seguro).
 - Cooldown de resgate é de **48h** desde o último resgate (`UltimoResgate == null` conta como liberado).
 
 ### `POST /api/game/seguro/resgate`

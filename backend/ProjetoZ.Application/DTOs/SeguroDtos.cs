@@ -56,6 +56,10 @@ namespace ProjetoZ.Application.DTOs
 
         // Nulo quando PodeResgatar é true.
         public DateTime? ProximoResgateEm { get; set; }
+
+        // Nulo até a sincronização de posição religar o vínculo (ou até o
+        // mod mandar na criação/resgate do seguro).
+        public string? CarroId { get; set; }
     }
 
     // Job do mod roda a cada ~15min e manda a posição de todos os veículos

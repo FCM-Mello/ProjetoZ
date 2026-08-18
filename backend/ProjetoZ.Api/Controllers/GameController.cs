@@ -306,7 +306,8 @@ public class GameController : ControllerBase
                     PodeResgatar = podeResgatar,
                     ProximoResgateEm = podeResgatar
                         ? null
-                        : s.UltimoResgate!.Value.AddHours(HorasCooldownResgate)
+                        : s.UltimoResgate!.Value.AddHours(HorasCooldownResgate),
+                    CarroId = s.CarroId
                 };
             })
             .ToList();
