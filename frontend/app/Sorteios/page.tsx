@@ -13,6 +13,7 @@ import { Product } from "../models/Product";
 import { VipTier } from "../models/VipTier";
 import SorteioModal from "./components/SorteioModal";
 import EstadoVazio from "../components/EstadoVazio";
+import Badge from "../components/Badge";
 import "./page.css";
 
 export default function Sorteios() {
@@ -134,9 +135,9 @@ export default function Sorteios() {
                             <h3>{sorteio.titulo}</h3>
 
                             <div className="sorteio-cabecalho-direita">
-                                <span className={`sorteio-status status-${sorteio.status}`}>
+                                <Badge tom={sorteio.status === "aberto" ? "info" : "coin"}>
                                     {sorteio.status === "aberto" ? "Aberto" : "Encerrado"}
-                                </span>
+                                </Badge>
 
                                 {isAdmin && (
                                     <button

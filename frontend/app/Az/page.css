@@ -106,7 +106,7 @@
     position:relative;
 
     color: var(--color-text-muted);
-    font-size:14px;
+    font-size:var(--fs-md);
 
     max-width:420px;
 }
@@ -132,14 +132,14 @@
 
 .saldoLabel{
     color: var(--color-text-muted);
-    font-size:11px;
+    font-size:var(--fs-xs);
     text-transform:uppercase;
     letter-spacing:.08em;
 }
 
 .saldoValor{
     color: var(--color-coin);
-    font-size:30px;
+    font-size:var(--fs-4xl);
     font-weight:700;
 
     text-shadow: 0 0 20px rgba(255,209,102,.45);
@@ -152,7 +152,7 @@
 
     margin-bottom:25px;
 
-    font-size:14px;
+    font-size:var(--fs-md);
     font-weight:600;
 }
 
@@ -201,7 +201,7 @@
 
     border:1px solid var(--color-border);
 
-    border-radius:12px;
+    border-radius:var(--radius-card);
 
     text-align:center;
 
@@ -314,13 +314,13 @@
     color: var(--color-text-muted);
     text-transform:uppercase;
     letter-spacing:.08em;
-    font-size:12px;
+    font-size:var(--fs-sm);
     font-weight:700;
 }
 
 .pacote-coins{
     color: var(--color-coin);
-    font-size:30px;
+    font-size:var(--fs-4xl);
     font-weight:700;
 
     text-shadow: 0 0 16px rgba(255,209,102,.3);
@@ -329,7 +329,7 @@
 .pacote-coins::after{
     content:" coins";
 
-    font-size:12px;
+    font-size:var(--fs-sm);
     font-weight:600;
     color: var(--color-text-muted);
 
@@ -338,7 +338,7 @@
 
 .pacote-preco{
     color: var(--color-text);
-    font-size:15px;
+    font-size:var(--fs-lg);
 }
 
 .pacote-card button{
@@ -359,7 +359,7 @@
     text-transform:uppercase;
     letter-spacing:.04em;
     font-weight:700;
-    font-size:13px;
+    font-size:var(--fs-base);
 
     transition:.2s;
 }

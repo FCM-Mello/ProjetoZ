@@ -29,6 +29,18 @@
     --color-info: #38bdf8;
 
     --shadow-panel: 0 15px 40px rgba(0,0,0,.5);
+
+    --fs-xs: 11px;
+    --fs-sm: 12px;
+    --fs-base: 13px;
+    --fs-md: 14px;
+    --fs-lg: 15px;
+    --fs-xl: 16px;
+    --fs-2xl: 20px;
+    --fs-3xl: 22px;
+    --fs-4xl: 30px;
+
+    --radius-card: 12px;
 }
 
 *{
