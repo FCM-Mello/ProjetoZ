@@ -1,4 +1,4 @@
-import { ClaResumo, ClaDetalhe, CriarClaRequest } from "../models/Cla";
+import { ClaResumo, ClaDetalhe, ClaBuscaJogador, CriarClaRequest } from "../models/Cla";
 import { authHeaders } from "./api";
 
 const API_URL = "/api/clas";
@@ -119,4 +119,45 @@ export async function desfazerCla(claId: string) {
 
     if (!response.ok)
         await tratarErro(response, "Erro ao desfazer clã");
+}
+
+export async function buscarJogadorParaConvidar(claId: string, q: string): Promise<ClaBuscaJogador[]> {
+    const response = await fetch(`${API_URL}/${claId}/buscar-jogador?q=${encodeURIComponent(q)}`, {
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        throw new Error("Erro ao buscar jogador");
+
+    return response.json();
+}
+
+export async function convidarParaCla(claId: string, userId: string) {
+    const response = await fetch(`${API_URL}/${claId}/convidar/${userId}`, {
+        method: "POST",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        await tratarErro(response, "Erro ao convidar jogador");
+}
+
+export async function aceitarConviteCla(conviteId: string) {
+    const response = await fetch(`${API_URL}/convites/${conviteId}/aceitar`, {
+        method: "POST",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        await tratarErro(response, "Erro ao aceitar convite");
+}
+
+export async function recusarConviteCla(conviteId: string) {
+    const response = await fetch(`${API_URL}/convites/${conviteId}/recusar`, {
+        method: "POST",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        await tratarErro(response, "Erro ao recusar convite");
 }

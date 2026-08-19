@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProjetoZ.Api.Services;
 using ProjetoZ.Application.DTOs;
 using ProjetoZ.Domain.Entities;
 using ProjetoZ.Persistence;
@@ -383,11 +384,212 @@ public class ClasController : ControllerBase
 
         await _context.ClaMembros.Where(m => m.ClaId == id).ExecuteDeleteAsync();
         await _context.ClaSolicitacoes.Where(s => s.ClaId == id).ExecuteDeleteAsync();
+
+        var convitesDoCla = await _context.ClaConvites.Where(c => c.ClaId == id).ToListAsync();
+        foreach (var convite in convitesDoCla)
+            await RemoverNotificacaoDoConvite(convite.Id);
+
+        _context.ClaConvites.RemoveRange(convitesDoCla);
         _context.Clas.Remove(cla);
 
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    // Líder/admin busca um jogador (por nome ou SteamId) pra convidar —
+    // qualquer usuário cadastrado serve, mesmo que já esteja em outro clã
+    // (aceitar o convite tira ele de lá).
+    [HttpGet("{id}/buscar-jogador")]
+    public async Task<IActionResult> BuscarJogador(Guid id, [FromQuery] string q)
+    {
+        var meuId = MeuId();
+        if (meuId == null)
+            return Unauthorized();
+
+        var minhaSteamId = await SteamIdDoUsuario(meuId.Value) ?? string.Empty;
+
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.Id == id);
+        if (cla == null)
+            return NotFound();
+
+        if (!await SouAdminOuLider(cla, minhaSteamId))
+            return Forbid();
+
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+            return Ok(new List<ClaBuscaJogadorDto>());
+
+        var termo = q.Trim().ToLower();
+
+        var resultados = await _context.Users
+            .Where(u => u.Profile != null
+                && ((u.Profile.Name != null && u.Profile.Name.ToLower().Contains(termo))
+                    || (u.Profile.SteamId != null && u.Profile.SteamId.Contains(termo))))
+            .OrderBy(u => u.Profile!.Name)
+            .Take(10)
+            .Select(u => new ClaBuscaJogadorDto
+            {
+                UserId = u.Id,
+                Nome = u.Profile!.Name ?? "Jogador",
+                Avatar = u.Profile.Avatar ?? string.Empty,
+            })
+            .ToListAsync();
+
+        return Ok(resultados);
+    }
+
+    [HttpPost("{id}/convidar/{userId}")]
+    public async Task<IActionResult> Convidar(Guid id, Guid userId)
+    {
+        var meuId = MeuId();
+        if (meuId == null)
+            return Unauthorized();
+
+        var minhaSteamId = await SteamIdDoUsuario(meuId.Value) ?? string.Empty;
+
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.Id == id);
+        if (cla == null)
+            return NotFound();
+
+        if (!await SouAdminOuLider(cla, minhaSteamId))
+            return Forbid();
+
+        var convidadoExiste = await _context.Users.AnyAsync(u => u.Id == userId);
+        if (!convidadoExiste)
+            return NotFound();
+
+        var jaEhMembro = await _context.ClaMembros.AnyAsync(m => m.ClaId == id && m.UserId == userId);
+        if (jaEhMembro)
+            return BadRequest("Esse jogador já é membro do clã.");
+
+        var jaConvidado = await _context.ClaConvites.AnyAsync(c => c.ClaId == id && c.ConvidadoUserId == userId);
+        if (jaConvidado)
+            return BadRequest("Esse jogador já tem um convite pendente pra esse clã.");
+
+        var convite = new ClaConvite
+        {
+            Id = Guid.NewGuid(),
+            ClaId = id,
+            ConvidadoUserId = userId,
+            ConvidadoPorUserId = meuId.Value,
+        };
+        _context.ClaConvites.Add(convite);
+
+        var agora = DateTime.UtcNow;
+        var notificacao = new Notificacao
+        {
+            Id = Guid.NewGuid(),
+            Titulo = "Convite de clã",
+            Mensagem = $"Você foi convidado para o clã \"{cla.Nome}\".",
+            Nivel = "amarelo",
+            CriadoEm = agora,
+            CriadoPorUserId = meuId.Value,
+            EnviarEm = agora,
+            ExpiraEm = agora.AddDays(NotificacaoNiveis.DiasAteExpirar),
+            ParaTodos = false,
+            Tipo = "convite_cla",
+            ClaConviteId = convite.Id,
+        };
+        _context.Notificacoes.Add(notificacao);
+
+        _context.NotificacaoDestinatarios.Add(new NotificacaoDestinatario
+        {
+            Id = Guid.NewGuid(),
+            NotificacaoId = notificacao.Id,
+            UserId = userId,
+        });
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPost("convites/{conviteId}/aceitar")]
+    public async Task<IActionResult> AceitarConvite(Guid conviteId)
+    {
+        var meuId = MeuId();
+        if (meuId == null)
+            return Unauthorized();
+
+        var convite = await _context.ClaConvites.FirstOrDefaultAsync(c => c.Id == conviteId);
+        if (convite == null)
+            return NotFound();
+
+        if (convite.ConvidadoUserId != meuId)
+            return Forbid();
+
+        var minhaSteamId = await SteamIdDoUsuario(meuId.Value);
+        if (string.IsNullOrEmpty(minhaSteamId))
+            return BadRequest("Sua conta precisa estar vinculada à Steam.");
+
+        // Sai do clã antigo, se tiver — a verdade do convite aceito vence.
+        var membroAntigo = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == minhaSteamId);
+        if (membroAntigo != null)
+            _context.ClaMembros.Remove(membroAntigo);
+
+        _context.ClaMembros.Add(new ClaMembro
+        {
+            Id = Guid.NewGuid(),
+            ClaId = convite.ClaId,
+            UserId = meuId.Value,
+            SteamId = minhaSteamId,
+            IsAdmin = false,
+        });
+
+        // Outros convites pendentes pro mesmo jogador (de outros clãs) ficam
+        // sem sentido — só pode estar em um clã por vez.
+        var outrosConvites = await _context.ClaConvites
+            .Where(c => c.ConvidadoUserId == meuId && c.Id != conviteId)
+            .ToListAsync();
+
+        foreach (var outro in outrosConvites)
+            await RemoverNotificacaoDoConvite(outro.Id);
+
+        _context.ClaConvites.RemoveRange(outrosConvites);
+
+        await RemoverNotificacaoDoConvite(convite.Id);
+        _context.ClaConvites.Remove(convite);
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPost("convites/{conviteId}/recusar")]
+    public async Task<IActionResult> RecusarConvite(Guid conviteId)
+    {
+        var meuId = MeuId();
+        if (meuId == null)
+            return Unauthorized();
+
+        var convite = await _context.ClaConvites.FirstOrDefaultAsync(c => c.Id == conviteId);
+        if (convite == null)
+            return NotFound();
+
+        if (convite.ConvidadoUserId != meuId)
+            return Forbid();
+
+        await RemoverNotificacaoDoConvite(convite.Id);
+        _context.ClaConvites.Remove(convite);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private async Task RemoverNotificacaoDoConvite(Guid conviteId)
+    {
+        var notificacao = await _context.Notificacoes.FirstOrDefaultAsync(n => n.ClaConviteId == conviteId);
+        if (notificacao == null)
+            return;
+
+        _context.NotificacaoDestinatarios.RemoveRange(
+            _context.NotificacaoDestinatarios.Where(d => d.NotificacaoId == notificacao.Id));
+
+        _context.NotificacaoLeituras.RemoveRange(
+            _context.NotificacaoLeituras.Where(l => l.NotificacaoId == notificacao.Id));
+
+        _context.Notificacoes.Remove(notificacao);
     }
 
     private async Task<bool> SouAdminOuLider(Cla cla, string minhaSteamId)

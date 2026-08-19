@@ -40,36 +40,41 @@
     cursor: default;
 }
 
-.rankingFiltros {
+.rankingAbas {
     display: flex;
-    gap: 8px;
+    gap: 4px;
 
     margin-bottom: 20px;
+
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
 }
 
-.rankingFiltro {
-    padding: 8px 16px;
+.rankingAba {
+    padding: 10px 16px;
 
-    border-radius: 20px;
-    border: 1px solid var(--color-border-strong);
+    border: none;
+    border-bottom: 2px solid transparent;
 
-    background: var(--color-bg-alt);
+    background: transparent;
     color: var(--color-text-muted);
 
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--fs-sm);
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
     cursor: pointer;
 
-    transition: .15s;
+    transition: color .15s, border-color .15s;
 }
 
-.rankingFiltro:hover {
+.rankingAba:hover {
     color: var(--color-text);
 }
 
-.rankingFiltro-ativo {
-    background: var(--color-accent-soft);
+.rankingAba-ativa {
     border-color: var(--color-accent);
     color: var(--color-accent-strong);
 }
@@ -139,12 +144,19 @@
     padding: 4px 12px;
     border-radius: 20px;
 
-    background: var(--color-accent-soft);
-    color: var(--color-accent-strong);
+    background: var(--color-surface-alt);
+    color: var(--color-text-muted);
 
-    font-size: 12px;
+    font-size: var(--fs-sm);
     font-weight: 700;
     white-space: nowrap;
+
+    transition: background .15s, color .15s;
+}
+
+.rankingStatDestaque-ativa {
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
 }
 
 @media (max-width: 640px) {

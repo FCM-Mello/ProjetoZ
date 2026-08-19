@@ -10,7 +10,21 @@ import Skeleton from "../components/Skeleton";
 import EstadoVazio from "../components/EstadoVazio";
 import "./page.css";
 
-type Criterio = "kd" | "koth";
+type Aba = "kd" | "koth" | "zumbis" | "tempo";
+
+const ABAS: { id: Aba; label: string }[] = [
+    { id: "kd", label: "Maior K/D" },
+    { id: "koth", label: "Mais KOTH" },
+    { id: "zumbis", label: "Mais Zumbis Mortos" },
+    { id: "tempo", label: "Mais Tempo de Sobrevivência" },
+];
+
+function formatarTempo(segundos: number) {
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+
+    return horas > 0 ? `${horas}h ${minutos}min` : `${minutos}min`;
+}
 
 export default function Ranking() {
     useRequireAuth();
@@ -20,7 +34,7 @@ export default function Ranking() {
 
     const [jogadores, setJogadores] = useState<RankingJogador[]>([]);
     const [carregando, setCarregando] = useState(true);
-    const [criterio, setCriterio] = useState<Criterio>("kd");
+    const [aba, setAba] = useState<Aba>("kd");
     const [resetando, setResetando] = useState(false);
     const listaRef = useScrollReveal<HTMLDivElement>(jogadores.length);
 
@@ -42,10 +56,17 @@ export default function Ranking() {
     const ordenados = useMemo(() => {
         const copia = [...jogadores];
 
-        return criterio === "koth"
-            ? copia.sort((a, b) => b.kothCompletados - a.kothCompletados || b.kd - a.kd)
-            : copia.sort((a, b) => b.kd - a.kd || b.kothCompletados - a.kothCompletados);
-    }, [jogadores, criterio]);
+        switch (aba) {
+            case "koth":
+                return copia.sort((a, b) => b.kothCompletados - a.kothCompletados || b.kd - a.kd);
+            case "zumbis":
+                return copia.sort((a, b) => b.zumbiKills - a.zumbiKills || b.kd - a.kd);
+            case "tempo":
+                return copia.sort((a, b) => b.segundosJogados - a.segundosJogados || b.kd - a.kd);
+            default:
+                return copia.sort((a, b) => b.kd - a.kd || b.kothCompletados - a.kothCompletados);
+        }
+    }, [jogadores, aba]);
 
     async function resetar() {
         if (!confirm("Resetar o ranking de todos os jogadores? Essa ação não pode ser desfeita."))
@@ -74,26 +95,23 @@ export default function Ranking() {
                 )}
             </div>
 
-            <div className="rankingFiltros">
-                <button
-                    className={`rankingFiltro ${criterio === "kd" ? "rankingFiltro-ativo" : ""}`}
-                    onClick={() => setCriterio("kd")}
-                >
-                    Maior K/D
-                </button>
-                <button
-                    className={`rankingFiltro ${criterio === "koth" ? "rankingFiltro-ativo" : ""}`}
-                    onClick={() => setCriterio("koth")}
-                >
-                    Mais KOTH completados
-                </button>
-            </div>
+            <nav className="rankingAbas">
+                {ABAS.map(a => (
+                    <button
+                        key={a.id}
+                        className={`rankingAba ${aba === a.id ? "rankingAba-ativa" : ""}`}
+                        onClick={() => setAba(a.id)}
+                    >
+                        {a.label}
+                    </button>
+                ))}
+            </nav>
 
             {!carregando && ordenados.length === 0 && (
                 <EstadoVazio
                     icone="🏆"
                     titulo="Nenhum jogador no ranking ainda."
-                    descricao="Assim que o mod sincronizar K/D ou KOTH, os jogadores aparecem aqui."
+                    descricao="Assim que o mod sincronizar K/D, KOTH, zumbis ou tempo de jogo, os jogadores aparecem aqui."
                 />
             )}
 
@@ -126,11 +144,21 @@ export default function Ranking() {
                             <span className="rankingStat" title="Kills / Mortes">
                                 {jogador.kills} / {jogador.deaths}
                             </span>
-                            <span className="rankingStatDestaque" title="K/D">
+
+                            <span className={`rankingStatDestaque ${aba === "kd" ? "rankingStatDestaque-ativa" : ""}`} title="K/D">
                                 K/D {jogador.kd.toFixed(2)}
                             </span>
-                            <span className="rankingStatDestaque" title="KOTH completados">
+
+                            <span className={`rankingStatDestaque ${aba === "koth" ? "rankingStatDestaque-ativa" : ""}`} title="KOTH completados">
                                 🏆 {jogador.kothCompletados}
+                            </span>
+
+                            <span className={`rankingStatDestaque ${aba === "zumbis" ? "rankingStatDestaque-ativa" : ""}`} title="Zumbis mortos">
+                                🧟 {jogador.zumbiKills}
+                            </span>
+
+                            <span className={`rankingStatDestaque ${aba === "tempo" ? "rankingStatDestaque-ativa" : ""}`} title="Tempo de sobrevivência">
+                                ⏱️ {formatarTempo(jogador.segundosJogados)}
                             </span>
                         </div>
                     </div>

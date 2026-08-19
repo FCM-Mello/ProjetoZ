@@ -46,6 +46,17 @@ namespace ProjetoZ.Application.DTOs
         public bool IsAdmin { get; set; }
     }
 
+    // GET /api/clas/{id}/buscar-jogador — resultado pra líder/admin escolher
+    // quem convidar.
+    public class ClaBuscaJogadorDto
+    {
+        public Guid UserId { get; set; }
+
+        public string Nome { get; set; } = string.Empty;
+
+        public string Avatar { get; set; } = string.Empty;
+    }
+
     public class ClaSolicitacaoDto
     {
         public Guid Id { get; set; }

@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { useToast } from "../contexts/ToastContext";
-import { ClaResumo, ClaDetalhe, CriarClaRequest } from "../models/Cla";
+import { ClaResumo, ClaDetalhe, ClaBuscaJogador, CriarClaRequest } from "../models/Cla";
 import {
     getClas, getMeuCla, criarCla, solicitarEntrada,
     aprovarSolicitacao, removerSolicitacao, promoverAdmin, removerAdmin,
-    sairDoCla, desfazerCla,
+    sairDoCla, desfazerCla, buscarJogadorParaConvidar, convidarParaCla,
 } from "../services/clasApi";
 import Badge from "../components/Badge";
 import EstadoVazio from "../components/EstadoVazio";
@@ -27,9 +27,34 @@ export default function Cla() {
     const [showCriarModal, setShowCriarModal] = useState(false);
     const [processando, setProcessando] = useState<string | null>(null);
 
+    const [buscaConvite, setBuscaConvite] = useState("");
+    const [resultadosConvite, setResultadosConvite] = useState<ClaBuscaJogador[]>([]);
+    const [buscandoConvite, setBuscandoConvite] = useState(false);
+    const [convidados, setConvidados] = useState<Set<string>>(new Set());
+
     useEffect(() => {
         carregar();
     }, []);
+
+    useEffect(() => {
+        if (!meuCla?.souAdmin || buscaConvite.trim().length < 2) {
+            setResultadosConvite([]);
+            return;
+        }
+
+        const timeout = setTimeout(async () => {
+            setBuscandoConvite(true);
+            try {
+                setResultadosConvite(await buscarJogadorParaConvidar(meuCla.id, buscaConvite.trim()));
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setBuscandoConvite(false);
+            }
+        }, 350);
+
+        return () => clearTimeout(timeout);
+    }, [buscaConvite, meuCla?.id, meuCla?.souAdmin]);
 
     async function carregar() {
         setCarregando(true);
@@ -129,6 +154,21 @@ export default function Cla() {
             await carregar();
         } catch (e) {
             mostrarErro(e instanceof Error ? e.message : "Erro ao remover admin.");
+        } finally {
+            setProcessando(null);
+        }
+    }
+
+    async function handleConvidar(jogador: ClaBuscaJogador) {
+        if (!meuCla) return;
+        setProcessando(jogador.userId);
+
+        try {
+            await convidarParaCla(meuCla.id, jogador.userId);
+            setConvidados(atual => new Set(atual).add(jogador.userId));
+            sucesso(`Convite enviado pra ${jogador.nome}.`);
+        } catch (e) {
+            mostrarErro(e instanceof Error ? e.message : "Erro ao convidar jogador.");
         } finally {
             setProcessando(null);
         }
@@ -262,6 +302,43 @@ export default function Cla() {
                             ))}
                         </ul>
                     </section>
+
+                    {meuCla.souAdmin && (
+                        <section className="claSecao">
+                            <h4>Convidar jogador</h4>
+                            <input
+                                className="claBuscaInput"
+                                placeholder="Buscar por nome ou SteamID..."
+                                value={buscaConvite}
+                                onChange={(e) => setBuscaConvite(e.target.value)}
+                            />
+
+                            {buscandoConvite && <p className="claBuscaStatus">Buscando...</p>}
+
+                            {!buscandoConvite && buscaConvite.trim().length >= 2 && resultadosConvite.length === 0 && (
+                                <p className="claBuscaStatus">Nenhum jogador encontrado.</p>
+                            )}
+
+                            {resultadosConvite.length > 0 && (
+                                <ul className="claListaMembros">
+                                    {resultadosConvite.map(jogador => (
+                                        <li key={jogador.userId} className="claMembroItem">
+                                            <img src={jogador.avatar} alt={jogador.nome} className="claAvatar" />
+                                            <span className="claNomeItem">{jogador.nome}</span>
+
+                                            <button
+                                                className="btnClaSecundario"
+                                                disabled={processando === jogador.userId || convidados.has(jogador.userId)}
+                                                onClick={() => handleConvidar(jogador)}
+                                            >
+                                                {convidados.has(jogador.userId) ? "Convite enviado" : "Convidar"}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </section>
+                    )}
 
                     <div className="claAcoesFinais">
                         {meuCla.souLider ? (

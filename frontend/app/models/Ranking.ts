@@ -6,4 +6,6 @@ export interface RankingJogador {
     deaths: number;
     kd: number;
     kothCompletados: number;
+    zumbiKills: number;
+    segundosJogados: number;
 }

@@ -47,6 +47,10 @@ namespace ProjetoZ.Application.DTOs
         public double Kd { get; set; }
 
         public int KothCompletados { get; set; }
+
+        public int ZumbiKills { get; set; }
+
+        public int SegundosJogados { get; set; }
     }
 
     // Devolvido por GET /api/game/ranking/jogador/{steamId} (mod, chave por

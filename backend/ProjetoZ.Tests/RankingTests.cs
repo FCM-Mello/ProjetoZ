@@ -213,6 +213,25 @@ public class RankingTests : IDisposable
     }
 
     [Fact]
+    public async Task GetRanking_TrazZumbisETempoJogado()
+    {
+        var user = CriarUsuario();
+        _db.Context.PlayerRankings.Add(new PlayerRanking { Id = Guid.NewGuid(), UserId = user.Id, ZumbiKills = 340, SegundosJogados = 45230 });
+        await _db.Context.SaveChangesAsync();
+
+        var controller = new RankingController(_db.Context);
+
+        var resultado = await controller.GetRanking();
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var lista = Assert.IsAssignableFrom<List<RankingJogadorDto>>(ok.Value);
+
+        var jogador = Assert.Single(lista);
+        Assert.Equal(340, jogador.ZumbiKills);
+        Assert.Equal(45230, jogador.SegundosJogados);
+    }
+
+    [Fact]
     public async Task ResetarRanking_LimpaTodosOsRegistros()
     {
         var user = CriarUsuario();

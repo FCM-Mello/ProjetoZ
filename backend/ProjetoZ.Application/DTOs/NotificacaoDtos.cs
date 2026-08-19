@@ -39,6 +39,12 @@ namespace ProjetoZ.Application.DTOs
         public DateTime EnviarEm { get; set; }
 
         public bool Lida { get; set; }
+
+        // "aviso" | "convite_cla" — o frontend só mostra os botões de
+        // aceitar/recusar quando é convite_cla.
+        public string Tipo { get; set; } = "aviso";
+
+        public Guid? ClaConviteId { get; set; }
     }
 
     // Visão do admin (GET /api/notificacoes, histórico completo).

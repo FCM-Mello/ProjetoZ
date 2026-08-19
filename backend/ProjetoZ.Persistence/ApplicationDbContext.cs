@@ -52,4 +52,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<ClaMembro> ClaMembros => Set<ClaMembro>();
 
     public DbSet<ClaSolicitacao> ClaSolicitacoes => Set<ClaSolicitacao>();
+
+    public DbSet<ClaConvite> ClaConvites => Set<ClaConvite>();
 }

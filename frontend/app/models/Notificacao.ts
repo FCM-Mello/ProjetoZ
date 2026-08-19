@@ -1,5 +1,7 @@
 export type NivelNotificacao = "verde" | "amarelo" | "vermelho";
 
+export type TipoNotificacao = "aviso" | "convite_cla";
+
 export interface Notificacao {
     id: string;
     titulo: string;
@@ -7,6 +9,8 @@ export interface Notificacao {
     nivel: NivelNotificacao;
     enviarEm: string;
     lida: boolean;
+    tipo: TipoNotificacao;
+    claConviteId: string | null;
 }
 
 export interface NotificacaoAdmin {

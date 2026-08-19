@@ -26,4 +26,13 @@ public class Notificacao
 
     // Se true, todo usuário vê — não gera linhas em NotificacaoDestinatario.
     public bool ParaTodos { get; set; }
+
+    // "aviso" (padrão, criado pelo admin) | "convite_cla" (criado pelo
+    // ClasController ao convidar alguém). O frontend usa isso pra saber se
+    // deve mostrar os botões de aceitar/recusar.
+    public string Tipo { get; set; } = "aviso";
+
+    // Preenchido só quando Tipo == "convite_cla" — aponta pro convite que o
+    // botão aceitar/recusar deve resolver.
+    public Guid? ClaConviteId { get; set; }
 }

@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getMinhasNotificacoes, marcarLida, marcarTodasLidas } from "../services/notificacoesApi";
+import { aceitarConviteCla, recusarConviteCla } from "../services/clasApi";
 import { Notificacao } from "../models/Notificacao";
 import { useClickOutside } from "../hooks/useClickOutside";
+import { useToast } from "../contexts/ToastContext";
 import EstadoVazio from "./EstadoVazio";
 import "./NotificationBell.css";
 
@@ -13,8 +15,10 @@ export default function NotificationBell() {
     const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
     const [aberto, setAberto] = useState(false);
     const [pingando, setPingando] = useState(false);
+    const [respondendo, setRespondendo] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const naoLidasAnteriorRef = useRef(0);
+    const { sucesso, erro: mostrarErro } = useToast();
 
     useClickOutside(menuRef, () => setAberto(false));
 
@@ -72,6 +76,28 @@ export default function NotificationBell() {
         return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     }
 
+    async function responderConvite(notificacao: Notificacao, aceitar: boolean, evento: React.MouseEvent) {
+        evento.stopPropagation();
+
+        if (!notificacao.claConviteId) return;
+
+        setRespondendo(notificacao.id);
+        try {
+            if (aceitar) {
+                await aceitarConviteCla(notificacao.claConviteId);
+                sucesso("Você entrou no clã!");
+            } else {
+                await recusarConviteCla(notificacao.claConviteId);
+            }
+
+            setNotificacoes(atual => atual.filter(n => n.id !== notificacao.id));
+        } catch (e) {
+            mostrarErro(e instanceof Error ? e.message : "Erro ao responder o convite.");
+        } finally {
+            setRespondendo(null);
+        }
+    }
+
     return (
         <div className="notificationBell" ref={menuRef}>
             <button className="notificationBellBotao" onClick={() => setAberto(a => !a)} title="Notificações">
@@ -107,6 +133,25 @@ export default function NotificationBell() {
                                     <strong>{n.titulo}</strong>
                                     <p>{n.mensagem}</p>
                                     <span className="notificationData">{formatarData(n.enviarEm)}</span>
+
+                                    {n.tipo === "convite_cla" && n.claConviteId && (
+                                        <div className="notificationAcoes">
+                                            <button
+                                                className="notificationBtnAceitar"
+                                                disabled={respondendo === n.id}
+                                                onClick={(e) => responderConvite(n, true, e)}
+                                            >
+                                                Aceitar
+                                            </button>
+                                            <button
+                                                className="notificationBtnRecusar"
+                                                disabled={respondendo === n.id}
+                                                onClick={(e) => responderConvite(n, false, e)}
+                                            >
+                                                Recusar
+                                            </button>
+                                        </div>
+                                    )}
                                 </li>
                             ))}
                         </ul>

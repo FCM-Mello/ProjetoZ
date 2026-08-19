@@ -440,4 +440,218 @@ public class ClasControllerTests : IDisposable
 
         Assert.Equal(2, Assert.Single(lista).TotalMembros);
     }
+
+    // ---- Convites ----
+
+    [Fact]
+    public async Task Convidar_ComoLider_CriaConviteENotificacao()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario(nome: "Convidado");
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.Convidar(cla.Id, convidado.Id);
+
+        Assert.IsType<OkResult>(resultado);
+
+        var convite = await _db.Context.ClaConvites.SingleAsync();
+        Assert.Equal(cla.Id, convite.ClaId);
+        Assert.Equal(convidado.Id, convite.ConvidadoUserId);
+        Assert.Equal(lider.Id, convite.ConvidadoPorUserId);
+
+        var notificacao = await _db.Context.Notificacoes.SingleAsync();
+        Assert.Equal("convite_cla", notificacao.Tipo);
+        Assert.Equal(convite.Id, notificacao.ClaConviteId);
+
+        var destinatario = await _db.Context.NotificacaoDestinatarios.SingleAsync();
+        Assert.Equal(convidado.Id, destinatario.UserId);
+    }
+
+    [Fact]
+    public async Task Convidar_MembroComumSemAdmin_RetornaForbid()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        var membroComum = CriarUsuario();
+        AdicionarMembro(cla, membroComum);
+
+        var convidado = CriarUsuario();
+
+        var controller = CriarController();
+        controller.ComoUsuario(membroComum.Id);
+
+        var resultado = await controller.Convidar(cla.Id, convidado.Id);
+
+        Assert.IsType<ForbidResult>(resultado);
+        Assert.False(await _db.Context.ClaConvites.AnyAsync());
+    }
+
+    [Fact]
+    public async Task Convidar_QuemJaEhMembro_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        var membro = CriarUsuario();
+        AdicionarMembro(cla, membro);
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.Convidar(cla.Id, membro.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+    }
+
+    [Fact]
+    public async Task Convidar_QuemJaTemConvitePendente_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario();
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        await controller.Convidar(cla.Id, convidado.Id);
+        var segunda = await controller.Convidar(cla.Id, convidado.Id);
+
+        Assert.IsType<BadRequestObjectResult>(segunda);
+    }
+
+    [Fact]
+    public async Task AceitarConvite_CriaMembroERemoveConviteENotificacao()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario();
+
+        var controllerLider = CriarController();
+        controllerLider.ComoUsuario(lider.Id);
+        await controllerLider.Convidar(cla.Id, convidado.Id);
+
+        var convite = await _db.Context.ClaConvites.SingleAsync();
+
+        var controllerConvidado = CriarController();
+        controllerConvidado.ComoUsuario(convidado.Id);
+
+        var resultado = await controllerConvidado.AceitarConvite(convite.Id);
+
+        Assert.IsType<OkResult>(resultado);
+        Assert.True(await _db.Context.ClaMembros.AnyAsync(m => m.ClaId == cla.Id && m.UserId == convidado.Id));
+        Assert.False(await _db.Context.ClaConvites.AnyAsync());
+        Assert.False(await _db.Context.Notificacoes.AnyAsync());
+    }
+
+    [Fact]
+    public async Task AceitarConvite_JaEstavaEmOutroCla_SaiDoAntigo()
+    {
+        var lider1 = CriarUsuario();
+        var claAntigo = CriarCla(lider1, nome: "Clã Antigo");
+
+        var lider2 = CriarUsuario();
+        var claNovo = CriarCla(lider2, nome: "Clã Novo");
+
+        var jogador = CriarUsuario();
+        AdicionarMembro(claAntigo, jogador);
+
+        var controllerLider2 = CriarController();
+        controllerLider2.ComoUsuario(lider2.Id);
+        await controllerLider2.Convidar(claNovo.Id, jogador.Id);
+
+        var convite = await _db.Context.ClaConvites.SingleAsync();
+
+        var controllerJogador = CriarController();
+        controllerJogador.ComoUsuario(jogador.Id);
+        await controllerJogador.AceitarConvite(convite.Id);
+
+        var membro = await _db.Context.ClaMembros.SingleAsync(m => m.UserId == jogador.Id);
+        Assert.Equal(claNovo.Id, membro.ClaId);
+    }
+
+    [Fact]
+    public async Task AceitarConvite_NaoEhOConvidado_RetornaForbid()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario();
+        var outroJogador = CriarUsuario();
+
+        var controllerLider = CriarController();
+        controllerLider.ComoUsuario(lider.Id);
+        await controllerLider.Convidar(cla.Id, convidado.Id);
+
+        var convite = await _db.Context.ClaConvites.SingleAsync();
+
+        var controllerOutro = CriarController();
+        controllerOutro.ComoUsuario(outroJogador.Id);
+
+        var resultado = await controllerOutro.AceitarConvite(convite.Id);
+
+        Assert.IsType<ForbidResult>(resultado);
+    }
+
+    [Fact]
+    public async Task RecusarConvite_RemoveConviteENotificacao()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario();
+
+        var controllerLider = CriarController();
+        controllerLider.ComoUsuario(lider.Id);
+        await controllerLider.Convidar(cla.Id, convidado.Id);
+
+        var convite = await _db.Context.ClaConvites.SingleAsync();
+
+        var controllerConvidado = CriarController();
+        controllerConvidado.ComoUsuario(convidado.Id);
+
+        var resultado = await controllerConvidado.RecusarConvite(convite.Id);
+
+        Assert.IsType<NoContentResult>(resultado);
+        Assert.False(await _db.Context.ClaConvites.AnyAsync());
+        Assert.False(await _db.Context.Notificacoes.AnyAsync());
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == convidado.Id));
+    }
+
+    [Fact]
+    public async Task Desfazer_RemoveConvitesENotificacoesPendentes()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario();
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+        await controller.Convidar(cla.Id, convidado.Id);
+
+        await controller.Desfazer(cla.Id);
+
+        Assert.False(await _db.Context.ClaConvites.AnyAsync());
+        Assert.False(await _db.Context.Notificacoes.AnyAsync());
+    }
+
+    [Fact]
+    public async Task BuscarJogador_EncontraPorNome()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        CriarUsuario(nome: "Zeca Sobrevivente");
+        CriarUsuario(nome: "Outro Qualquer");
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.BuscarJogador(cla.Id, "zeca");
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var lista = Assert.IsAssignableFrom<List<ClaBuscaJogadorDto>>(ok.Value);
+
+        Assert.Equal("Zeca Sobrevivente", Assert.Single(lista).Nome);
+    }
 }

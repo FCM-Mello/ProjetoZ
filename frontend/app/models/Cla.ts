@@ -37,6 +37,12 @@ export interface ClaDetalhe {
     tenhoSolicitacaoPendente: boolean;
 }
 
+export interface ClaBuscaJogador {
+    userId: string;
+    nome: string;
+    avatar: string;
+}
+
 export interface CriarClaRequest {
     nome: string;
     descricao: string;

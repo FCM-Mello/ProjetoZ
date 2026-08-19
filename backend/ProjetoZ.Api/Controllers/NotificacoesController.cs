@@ -53,7 +53,9 @@ public class NotificacoesController : ControllerBase
             Mensagem = n.Mensagem,
             Nivel = n.Nivel,
             EnviarEm = n.EnviarEm,
-            Lida = lidasSet.Contains(n.Id)
+            Lida = lidasSet.Contains(n.Id),
+            Tipo = n.Tipo,
+            ClaConviteId = n.ClaConviteId,
         }));
     }
 

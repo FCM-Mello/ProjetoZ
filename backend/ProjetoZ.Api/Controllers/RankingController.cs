@@ -40,6 +40,8 @@ public class RankingController : ControllerBase
                 r.Kills,
                 r.Deaths,
                 r.KothCompletados,
+                r.ZumbiKills,
+                r.SegundosJogados,
             }
         ).ToListAsync();
 
@@ -53,6 +55,8 @@ public class RankingController : ControllerBase
                 Deaths = b.Deaths,
                 Kd = RankingCalculos.CalcularKd(b.Kills, b.Deaths),
                 KothCompletados = b.KothCompletados,
+                ZumbiKills = b.ZumbiKills,
+                SegundosJogados = b.SegundosJogados,
             })
             .OrderByDescending(r => r.Kd)
             .ToList();
