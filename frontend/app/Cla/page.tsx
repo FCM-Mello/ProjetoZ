@@ -9,7 +9,6 @@ import {
     aprovarSolicitacao, removerSolicitacao, promoverAdmin, removerAdmin,
     removerMembro, sairDoCla, desfazerCla, buscarJogadorParaConvidar, convidarParaCla,
 } from "../services/clasApi";
-import Badge from "../components/Badge";
 import EstadoVazio from "../components/EstadoVazio";
 import Skeleton from "../components/Skeleton";
 import ClaCriarModal from "./components/ClaCriarModal";
@@ -279,8 +278,24 @@ export default function Cla() {
 
                         <div className="claBannerInfo">
                             <h3>{meuCla.nome}</h3>
+                            <div className="claBannerRule" />
                             {meuCla.descricao && <p>{meuCla.descricao}</p>}
                             <span className="claTotalMembros">{meuCla.membros.length} {meuCla.membros.length === 1 ? "membro" : "membros"}</span>
+                        </div>
+
+                        <div className="claBannerSelos">
+                            <div className="claBannerSelo">
+                                <span className="claBannerSeloValor">{meuCla.estatisticas.kdMedio.toFixed(2)}</span>
+                                <span className="claBannerSeloLabel">K/D</span>
+                            </div>
+                            <div className="claBannerSelo">
+                                <span className="claBannerSeloValor">{meuCla.estatisticas.totalKothCompletados}</span>
+                                <span className="claBannerSeloLabel">KOTH</span>
+                            </div>
+                            <div className="claBannerSelo">
+                                <span className="claBannerSeloValor">{meuCla.estatisticas.totalZumbiKills}</span>
+                                <span className="claBannerSeloLabel">Zumbis</span>
+                            </div>
                         </div>
                     </div>
 
@@ -340,8 +355,8 @@ export default function Cla() {
                                     <span className="claRankingPosicao">{i + 1}º</span>
                                     <img src={m.avatar} alt={m.nome} className="claAvatar" />
                                     <span className="claNomeItem">{m.nome}</span>
-                                    {m.isLider && <Badge tom="accent">Líder</Badge>}
-                                    {!m.isLider && m.isAdmin && <Badge tom="info">Admin</Badge>}
+                                    {m.isLider && <span className="claSelo">Líder</span>}
+                                    {!m.isLider && m.isAdmin && <span className="claSelo claSelo-admin">Admin</span>}
 
                                     <div className="claRankingStats">
                                         <span className={`claRankingStatDestaque ${abaRanking === "kd" ? "claRankingStatDestaque-ativa" : ""}`}>
@@ -401,8 +416,8 @@ export default function Cla() {
                                     <img src={m.avatar} alt={m.nome} className="claAvatar" />
                                     <span className="claNomeItem">{m.nome}</span>
 
-                                    {m.isLider && <Badge tom="accent">Líder</Badge>}
-                                    {!m.isLider && m.isAdmin && <Badge tom="info">Admin</Badge>}
+                                    {m.isLider && <span className="claSelo">Líder</span>}
+                                    {!m.isLider && m.isAdmin && <span className="claSelo claSelo-admin">Admin</span>}
 
                                     {!m.isLider && meuCla.souAdmin && m.userId && (
                                         <div className="claAcoes">
