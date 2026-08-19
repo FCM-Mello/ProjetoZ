@@ -1,0 +1,391 @@
+.containerCla {
+    width: 70%;
+    margin: 70px auto 40px;
+}
+
+.claHeader {
+    margin-bottom: 25px;
+}
+
+.claListaHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-bottom: 25px;
+}
+
+.claListaSubtitulo {
+    color: var(--color-text-muted);
+    font-size: var(--fs-base);
+}
+
+.btnClaCriar {
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    background: var(--color-accent);
+    color: #1a1004;
+
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+    font-size: var(--fs-base);
+
+    transition: .2s;
+    flex-shrink: 0;
+}
+
+.btnClaCriar:hover {
+    background: var(--color-accent-strong);
+}
+
+/* ---- Lista de clãs (quem não tem clã) ---- */
+
+.claGridLista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.claCard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 20px;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+
+    transition: transform .2s, border-color .2s;
+}
+
+.claCard:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-border-strong);
+}
+
+.claCardEstandarte {
+    width: 100%;
+    height: 140px;
+
+    object-fit: cover;
+    border-radius: 8px;
+
+    background: var(--color-surface-alt);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.claCardNome {
+    color: var(--color-text);
+    font-weight: 700;
+    font-size: var(--fs-md);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+.claCardDescricao {
+    color: var(--color-text-muted);
+    font-size: var(--fs-sm);
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.claCardMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    color: var(--color-text-muted);
+    font-size: var(--fs-sm);
+}
+
+.btnClaSolicitar {
+    margin-top: auto;
+    padding: 10px;
+
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    background: var(--color-accent);
+    color: #1a1004;
+
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+    font-size: var(--fs-sm);
+
+    transition: .2s;
+}
+
+.btnClaSolicitar:hover:not(:disabled) {
+    background: var(--color-accent-strong);
+}
+
+.btnClaSolicitar:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+/* ---- Painel do meu clã ---- */
+
+.claPainel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.claBanner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    padding: 24px;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.claEstandarte {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+
+    object-fit: cover;
+    border-radius: 12px;
+
+    background: var(--color-surface-alt);
+}
+
+.claEstandarte-vazio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.claBannerInfo h3 {
+    color: var(--color-text);
+    font-size: var(--fs-2xl);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+.claBannerInfo p {
+    color: var(--color-text-muted);
+    font-size: var(--fs-base);
+    margin-top: 4px;
+}
+
+.claTotalMembros {
+    display: inline-block;
+    margin-top: 8px;
+
+    color: var(--color-text-muted);
+    font-size: var(--fs-sm);
+}
+
+.claSecao {
+    padding: 20px;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.claSecao h4 {
+    color: var(--color-text);
+    font-size: var(--fs-lg);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+
+    margin-bottom: 14px;
+}
+
+.claListaMembros,
+.claListaSolicitacoes {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.claMembroItem,
+.claSolicitacaoItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 10px 14px;
+
+    background: var(--color-surface-alt);
+    border-radius: 8px;
+}
+
+.claAvatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.claNomeItem {
+    flex: 1;
+    min-width: 0;
+
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: var(--fs-base);
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.claAcoes {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btnClaSecundario {
+    padding: 6px 12px;
+
+    border: 1px solid var(--color-border-strong);
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+
+    transition: .15s;
+    white-space: nowrap;
+}
+
+.btnClaSecundario:hover:not(:disabled) {
+    color: var(--color-text);
+    border-color: var(--color-accent);
+}
+
+.btnClaSecundario:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.btnClaAprovar,
+.btnClaRejeitar {
+    padding: 6px 14px;
+
+    border: none;
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+
+    transition: .15s;
+    white-space: nowrap;
+}
+
+.btnClaAprovar {
+    background: var(--color-success);
+    color: #06210f;
+}
+
+.btnClaAprovar:hover:not(:disabled) {
+    background: var(--color-success-strong);
+}
+
+.btnClaRejeitar {
+    background: var(--color-surface);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger-strong);
+}
+
+.btnClaRejeitar:hover:not(:disabled) {
+    background: rgba(239, 68, 68, .14);
+}
+
+.btnClaAprovar:disabled,
+.btnClaRejeitar:disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.claAcoesFinais {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btnClaPerigo {
+    padding: 10px 20px;
+
+    border: 1px solid var(--color-danger);
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    background: transparent;
+    color: var(--color-danger-strong);
+
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+
+    transition: .2s;
+}
+
+.btnClaPerigo:hover {
+    background: var(--color-danger);
+    color: #2b0505;
+}
+
+@media (max-width: 640px) {
+    .claListaHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .claBanner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .claMembroItem,
+    .claSolicitacaoItem {
+        flex-wrap: wrap;
+    }
+
+    .claAcoes {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

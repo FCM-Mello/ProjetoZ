@@ -15,5 +15,9 @@ public class PlayerRanking
 
     public int KothCompletados { get; set; }
 
+    public int ZumbiKills { get; set; }
+
+    public int SegundosJogados { get; set; }
+
     public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
 }

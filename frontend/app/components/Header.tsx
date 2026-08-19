@@ -39,6 +39,7 @@ export default function Header() {
                     <Link href="/Sorteios" className={linkClass("/Sorteios")}>SORTEIOS</Link>
                     <Link href="/Clipes" className={linkClass("/Clipes")}>CLIPES</Link>
                     <Link href="/Ranking" className={linkClass("/Ranking")}>RANKING</Link>
+                    <Link href="/Cla" className={linkClass("/Cla")}>CLÃ</Link>
                     {user?.isAdmin && (
                         <Link href="/Admin" className={linkClass("/Admin")}>ADMIN</Link>
                     )}

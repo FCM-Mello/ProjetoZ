@@ -7,7 +7,8 @@ Referência de tudo que o servidor de jogo (mod ArkZ) pode chamar na API do site
 Não usa JWT — o servidor de jogo não é um usuário logado no site. Todo endpoint recebe `apiKey` **no corpo** da requisição (não em header) e valida contra `GameServer:ApiKey` (env var `GAMESERVER_API_KEY`) com comparação resistente a timing attack.
 
 - Chave errada ou ausente → `401 Unauthorized`.
-- Todas as chamadas são `POST` com corpo JSON, mesmo as que só leem dado (convenção do controller, não RESTful "puro" — é assim porque o cliente HTTP do mod manda tudo no corpo).
+- A maioria das chamadas é `POST` com corpo JSON, mesmo as que só leem dado (convenção do controller, não RESTful "puro" — é assim porque o cliente HTTP do mod manda tudo no corpo).
+- Exceção: os endpoints `GET` de leitura sob demanda (ranking e grupo de 1 jogador, mais abaixo) não têm corpo, então a `apiKey` vai no header `X-Api-Key` em vez do corpo.
 
 ## `POST /api/game/player`
 
@@ -198,16 +199,24 @@ Alimenta a página `/Ranking` do site — cada jogador com pelo menos uma sincro
 
 ### `POST /api/game/ranking/kd`
 
-Sincroniza os **totais absolutos** de kills/deaths do jogador — o mod manda o total atual, não um incremento (o valor novo **substitui** o antigo, igual à sincronização de posição de veículos).
+Sincroniza os **totais absolutos** do jogador — o mod manda o total atual, não um incremento (o valor novo **substitui** o antigo, igual à sincronização de posição de veículos). `kothCompletados` aqui é redundante com o `POST /ranking/koth` abaixo (que incrementa por chamada) — serve pra corrigir qualquer desvio se algum incremento se perder.
 
 ```json
 // request
-{ "apiKey": "...", "steamId": "76561198886359962", "kills": 42, "deaths": 7 }
+{
+  "apiKey": "...",
+  "steamId": "76561198886359962",
+  "kills": 42,
+  "deaths": 7,
+  "zumbiKills": 340,
+  "kothCompletados": 4,
+  "segundosJogados": 45230
+}
 
 // response 200 (corpo vazio)
 ```
 
-- `kills`/`deaths` não podem ser negativos (`400` se forem).
+- Nenhum valor pode ser negativo (`400` se algum for).
 - Cria a linha de ranking desse jogador na primeira sincronização.
 - `404` se `steamId` desconhecido.
 
@@ -226,9 +235,79 @@ Chamado **uma vez a cada conclusão do KOTH** pelo jogador — soma 1 ao contado
 - Cria a linha de ranking desse jogador na primeira conclusão.
 - `404` se `steamId` desconhecido.
 
+### `GET /api/game/ranking/jogador/{steamId}`
+
+Leitura sob demanda (tela de perfil no jogo) — chave via header `X-Api-Key`, não no corpo.
+
+```
+GET /api/game/ranking/jogador/76561198886359962
+X-Api-Key: ...
+
+// response 200
+{
+  "steamId": "76561198886359962",
+  "nome": "Fulano",
+  "kills": 42,
+  "deaths": 7,
+  "zumbiKills": 340,
+  "kothCompletados": 5,
+  "segundosJogados": 45230
+}
+```
+
+- `404` se o jogador nunca sincronizou nenhum dado de ranking (nem K/D nem KOTH).
+
 ### Reset (admin, site)
 
 `DELETE /api/ranking` (JWT, precisa ser admin) apaga **todos** os registros de ranking de uma vez — não existe reset por jogador individual. Usado pra zerar o placar no início de uma temporada, por exemplo.
+
+## Grupos
+
+Sync **absoluto** de todos os grupos ativos no servidor — cada chamada de `POST /grupos/sync` substitui inteiramente o que a API tinha (grupo dissolvido/renomeado no jogo desaparece/atualiza aqui na próxima chamada, sem expirar por tempo como o Seguro).
+
+### `POST /api/game/grupos/sync`
+
+```json
+// request
+{
+  "apiKey": "...",
+  "grupos": [
+    {
+      "id": "1755500000-482913",
+      "nome": "Grupo de Fulano",
+      "liderSteamId": "76561198886359962",
+      "membros": ["76561198886359962", "76561198000000111"]
+    }
+  ]
+}
+
+// response 200 (corpo vazio)
+```
+
+- Chamar com `grupos: []` apaga todos os grupos (nenhum grupo ativo no momento).
+
+### `GET /api/game/grupos/jogador/{steamId}`
+
+Leitura sob demanda (tela de grupo no jogo) — chave via header `X-Api-Key`.
+
+```
+GET /api/game/grupos/jogador/76561198886359962
+X-Api-Key: ...
+
+// response 200 — tem grupo
+{
+  "temGrupo": true,
+  "id": "1755500000-482913",
+  "nome": "Grupo de Fulano",
+  "liderSteamId": "76561198886359962",
+  "membros": ["76561198886359962", "76561198000000111"]
+}
+
+// response 200 — sem grupo
+{ "temGrupo": false }
+```
+
+- "Sem grupo" é um estado válido — sempre `200`, nunca `404`.
 
 ## Resumo dos endpoints
 
@@ -241,5 +320,8 @@ Chamado **uma vez a cada conclusão do KOTH** pelo jogador — soma 1 ao contado
 | `POST /api/game/seguros` | Listar seguros ativos + estado do cooldown |
 | `POST /api/game/seguro/resgate` | Resgatar (normal ou expresso, `pago: true`) |
 | `POST /api/game/veiculos/posicao` | Sync em lote de posição de veículos segurados |
-| `POST /api/game/ranking/kd` | Sincronizar total absoluto de kills/deaths |
+| `POST /api/game/ranking/kd` | Sincronizar totais absolutos (kills, deaths, zumbis, koth, tempo jogado) |
 | `POST /api/game/ranking/koth` | Somar 1 conclusão de KOTH |
+| `GET /api/game/ranking/jogador/{steamId}` | Resumo de ranking de 1 jogador (chave no header) |
+| `POST /api/game/grupos/sync` | Sync absoluto de todos os grupos ativos |
+| `GET /api/game/grupos/jogador/{steamId}` | Grupo atual de 1 jogador, se tiver (chave no header) |

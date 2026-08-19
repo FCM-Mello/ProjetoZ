@@ -420,8 +420,9 @@ public class GameController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.SteamId))
             return BadRequest("SteamId é obrigatório.");
 
-        if (request.Kills < 0 || request.Deaths < 0)
-            return BadRequest("Kills e Deaths não podem ser negativos.");
+        if (request.Kills < 0 || request.Deaths < 0 || request.ZumbiKills < 0
+            || request.KothCompletados < 0 || request.SegundosJogados < 0)
+            return BadRequest("Valores não podem ser negativos.");
 
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
@@ -440,6 +441,9 @@ public class GameController : ControllerBase
 
         ranking.Kills = request.Kills;
         ranking.Deaths = request.Deaths;
+        ranking.ZumbiKills = request.ZumbiKills;
+        ranking.KothCompletados = request.KothCompletados;
+        ranking.SegundosJogados = request.SegundosJogados;
         ranking.AtualizadoEm = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -480,6 +484,167 @@ public class GameController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(new { kothCompletados = ranking.KothCompletados });
+    }
+
+    // Leitura sob demanda (tela de perfil no jogo) — diferente dos POSTs
+    // acima, que rodam em ciclo automático de 15min. Por isso a chave vem no
+    // header em vez do corpo (GET não carrega corpo).
+    [HttpGet("ranking/jogador/{steamId}")]
+    public async Task<IActionResult> GetRankingJogador(string steamId)
+    {
+        if (!ValidarApiKey(Request.Headers["X-Api-Key"]))
+            return Unauthorized();
+
+        var dto = await (
+            from r in _context.PlayerRankings
+            join u in _context.Users on r.UserId equals u.Id
+            where u.Profile != null && u.Profile.SteamId == steamId
+            select new JogadorRankingDto
+            {
+                SteamId = steamId,
+                Nome = u.Profile!.Name ?? "Jogador",
+                Kills = r.Kills,
+                Deaths = r.Deaths,
+                ZumbiKills = r.ZumbiKills,
+                KothCompletados = r.KothCompletados,
+                SegundosJogados = r.SegundosJogados,
+            }
+        ).FirstOrDefaultAsync();
+
+        if (dto == null)
+            return NotFound();
+
+        return Ok(dto);
+    }
+
+    // Sync absoluto DOS GRUPOS DO MOD (upsert por GrupoModId) — clã e grupo
+    // são a mesma entidade (Cla), mas essa sincronização só toca clãs de
+    // origem mod (GrupoModId preenchido); clãs criados no site (GrupoModId
+    // nulo) nunca são apagados/alterados por aqui. Grupo que não vier mais
+    // num lote foi dissolvido no jogo e é removido. A verdade do jogo
+    // sempre vence: se um jogador aparece num grupo diferente do que a API
+    // tinha, o vínculo antigo (de qualquer clã, site ou mod) é desfeito.
+    [HttpPost("grupos/sync")]
+    public async Task<IActionResult> SincronizarGrupos(GrupoSyncRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        var idsRecebidos = request.Grupos
+            .Where(g => !string.IsNullOrWhiteSpace(g.Id))
+            .Select(g => g.Id)
+            .ToList();
+
+        var clasDissolvidos = await _context.Clas
+            .Where(c => c.GrupoModId != null && !idsRecebidos.Contains(c.GrupoModId))
+            .ToListAsync();
+
+        foreach (var claDissolvido in clasDissolvidos)
+        {
+            await _context.ClaMembros.Where(m => m.ClaId == claDissolvido.Id).ExecuteDeleteAsync();
+            await _context.ClaSolicitacoes.Where(s => s.ClaId == claDissolvido.Id).ExecuteDeleteAsync();
+            _context.Clas.Remove(claDissolvido);
+        }
+
+        if (clasDissolvidos.Count > 0)
+            await _context.SaveChangesAsync();
+
+        var agora = DateTime.UtcNow;
+
+        foreach (var grupo in request.Grupos)
+        {
+            if (string.IsNullOrWhiteSpace(grupo.Id))
+                continue;
+
+            var cla = await _context.Clas.FirstOrDefaultAsync(c => c.GrupoModId == grupo.Id);
+
+            if (cla == null)
+            {
+                cla = new Cla { Id = Guid.NewGuid(), GrupoModId = grupo.Id, CriadoEm = agora };
+                _context.Clas.Add(cla);
+            }
+
+            var liderUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == grupo.LiderSteamId);
+
+            cla.Nome = grupo.Nome;
+            cla.LiderSteamId = grupo.LiderSteamId;
+            cla.LiderUserId = liderUser?.Id;
+
+            var membrosAtuais = await _context.ClaMembros
+                .Where(m => m.ClaId == cla.Id)
+                .ToDictionaryAsync(m => m.SteamId);
+
+            var steamIdsNovos = grupo.Membros ?? new List<string>();
+
+            foreach (var steamId in steamIdsNovos)
+            {
+                if (membrosAtuais.ContainsKey(steamId))
+                    continue;
+
+                // O jogador pode já estar vinculado a outro clã (site ou
+                // mod) — a verdade do jogo vence, desfaz o vínculo antigo.
+                var vinculoAnterior = await _context.ClaMembros
+                    .FirstOrDefaultAsync(m => m.SteamId == steamId);
+                if (vinculoAnterior != null)
+                    _context.ClaMembros.Remove(vinculoAnterior);
+
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == steamId);
+
+                _context.ClaMembros.Add(new ClaMembro
+                {
+                    Id = Guid.NewGuid(),
+                    ClaId = cla.Id,
+                    UserId = user?.Id,
+                    SteamId = steamId,
+                    IsAdmin = steamId == grupo.LiderSteamId,
+                    EntrouEm = agora,
+                });
+            }
+
+            foreach (var (steamId, membro) in membrosAtuais)
+            {
+                if (!steamIdsNovos.Contains(steamId))
+                    _context.ClaMembros.Remove(membro);
+                else if (steamId == grupo.LiderSteamId && !membro.IsAdmin)
+                    membro.IsAdmin = true;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok();
+    }
+
+    // Leitura sob demanda (tela de grupo no jogo). "Sem grupo" é um estado
+    // válido — devolve 200 com TemGrupo=false, não 404.
+    [HttpGet("grupos/jogador/{steamId}")]
+    public async Task<IActionResult> GetGrupoJogador(string steamId)
+    {
+        if (!ValidarApiKey(Request.Headers["X-Api-Key"]))
+            return Unauthorized();
+
+        var membro = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == steamId);
+        if (membro == null)
+            return Ok(new GrupoJogadorDto { TemGrupo = false });
+
+        var cla = await _context.Clas.FirstAsync(c => c.Id == membro.ClaId);
+        var membros = await _context.ClaMembros
+            .Where(m => m.ClaId == cla.Id)
+            .Select(m => m.SteamId)
+            .ToListAsync();
+
+        return Ok(new GrupoJogadorDto
+        {
+            TemGrupo = true,
+            // Grupo de origem mod devolve o Id que o mod reconhece; clã de
+            // origem site devolve o Guid interno mesmo, já que não há outro.
+            Id = cla.GrupoModId ?? cla.Id.ToString(),
+            Nome = cla.Nome,
+            LiderSteamId = cla.LiderSteamId,
+            Membros = membros,
+        });
     }
 
     private bool ValidarApiKey(string? providedKey)

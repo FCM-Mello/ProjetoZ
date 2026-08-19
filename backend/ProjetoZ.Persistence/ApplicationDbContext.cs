@@ -46,4 +46,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<NotificacaoLeitura> NotificacaoLeituras => Set<NotificacaoLeitura>();
 
     public DbSet<PlayerRanking> PlayerRankings => Set<PlayerRanking>();
+
+    public DbSet<Cla> Clas => Set<Cla>();
+
+    public DbSet<ClaMembro> ClaMembros => Set<ClaMembro>();
+
+    public DbSet<ClaSolicitacao> ClaSolicitacoes => Set<ClaSolicitacao>();
 }
