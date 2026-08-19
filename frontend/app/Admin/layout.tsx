@@ -7,6 +7,7 @@ import "./page.css";
 
 const ABAS = [
     { href: "/Admin", nome: "Usuários" },
+    { href: "/Admin/Clas", nome: "Clãs" },
     { href: "/Admin/Notificacoes", nome: "Notificações" },
 ];
 

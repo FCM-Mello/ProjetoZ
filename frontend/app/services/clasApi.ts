@@ -101,6 +101,16 @@ export async function removerAdmin(claId: string, userId: string) {
         await tratarErro(response, "Erro ao remover admin");
 }
 
+export async function removerMembro(claId: string, userId: string) {
+    const response = await fetch(`${API_URL}/${claId}/membros/${userId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        await tratarErro(response, "Erro ao remover membro");
+}
+
 export async function sairDoCla(claId: string) {
     const response = await fetch(`${API_URL}/${claId}/sair`, {
         method: "POST",

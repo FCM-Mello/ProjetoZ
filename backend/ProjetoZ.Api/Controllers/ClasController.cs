@@ -342,6 +342,37 @@ public class ClasController : ControllerBase
         return Ok();
     }
 
+    // Só o líder pode expulsar um membro — inclui admins (pra tirar um
+    // admin do clã de vez, não só o cargo, o líder usa esse em vez do
+    // RemoverAdmin). O próprio líder não pode se auto-expulsar, precisa
+    // desfazer o clã.
+    [HttpDelete("{id}/membros/{userId}")]
+    public async Task<IActionResult> RemoverMembro(Guid id, Guid userId)
+    {
+        var meuId = MeuId();
+        if (meuId == null)
+            return Unauthorized();
+
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.Id == id);
+        if (cla == null)
+            return NotFound();
+
+        if (cla.LiderUserId != meuId)
+            return Forbid();
+
+        if (userId == cla.LiderUserId)
+            return BadRequest("O líder não pode se auto-expulsar — precisa desfazer o clã.");
+
+        var membro = await _context.ClaMembros.FirstOrDefaultAsync(m => m.ClaId == id && m.UserId == userId);
+        if (membro == null)
+            return NotFound();
+
+        _context.ClaMembros.Remove(membro);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [HttpPost("{id}/sair")]
     public async Task<IActionResult> Sair(Guid id)
     {

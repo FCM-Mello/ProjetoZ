@@ -253,6 +253,145 @@ public class AdminController : ControllerBase
         return Ok(MapDto(user));
     }
 
+    [HttpGet("clas")]
+    public async Task<IActionResult> GetClas()
+    {
+        var brutos = await (
+            from c in _context.Clas
+            join lider in _context.Users on c.LiderUserId equals lider.Id into gj
+            from lider in gj.DefaultIfEmpty()
+            orderby c.CriadoEm descending
+            select new
+            {
+                c.Id,
+                c.Nome,
+                c.Descricao,
+                c.Estandarte,
+                c.GrupoModId,
+                c.CriadoEm,
+                LiderNome = lider != null && lider.Profile != null ? lider.Profile.Name : null,
+            }
+        ).ToListAsync();
+
+        var contagem = await _context.ClaMembros
+            .GroupBy(m => m.ClaId)
+            .Select(g => new { ClaId = g.Key, Total = g.Count() })
+            .ToDictionaryAsync(x => x.ClaId, x => x.Total);
+
+        return Ok(brutos.Select(c => new AdminClaDto
+        {
+            Id = c.Id,
+            Nome = c.Nome,
+            Descricao = c.Descricao,
+            Estandarte = c.Estandarte,
+            GrupoModId = c.GrupoModId,
+            LiderNome = c.LiderNome ?? "Jogador",
+            TotalMembros = contagem.TryGetValue(c.Id, out var total) ? total : 0,
+            CriadoEm = c.CriadoEm,
+        }));
+    }
+
+    [HttpGet("clas/{id}")]
+    public async Task<IActionResult> GetCla(Guid id)
+    {
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.Id == id);
+        if (cla == null)
+            return NotFound();
+
+        var membros = await (
+            from m in _context.ClaMembros
+            join u in _context.Users on m.UserId equals u.Id into gj
+            from u in gj.DefaultIfEmpty()
+            where m.ClaId == id
+            select new AdminClaMembroDto
+            {
+                UserId = m.UserId,
+                SteamId = m.SteamId,
+                Nome = u != null && u.Profile != null && u.Profile.Name != null ? u.Profile.Name : "Jogador",
+                Avatar = u != null && u.Profile != null && u.Profile.Avatar != null ? u.Profile.Avatar : string.Empty,
+                IsLider = m.SteamId == cla.LiderSteamId,
+                IsAdmin = m.IsAdmin,
+            }
+        ).ToListAsync();
+
+        return Ok(new AdminClaDetalheDto
+        {
+            Id = cla.Id,
+            Nome = cla.Nome,
+            Descricao = cla.Descricao,
+            Estandarte = cla.Estandarte,
+            GrupoModId = cla.GrupoModId,
+            LiderNome = membros.FirstOrDefault(m => m.IsLider)?.Nome ?? "Jogador",
+            TotalMembros = membros.Count,
+            CriadoEm = cla.CriadoEm,
+            Membros = membros
+                .OrderByDescending(m => m.IsLider)
+                .ThenByDescending(m => m.IsAdmin)
+                .ThenBy(m => m.Nome)
+                .ToList(),
+        });
+    }
+
+    // Controle de moderação do site — independe de ser líder/admin do
+    // próprio clã, então não passa pelas checagens de papel do
+    // ClasController (esse aqui é sempre policy "Admin" do site).
+    [HttpDelete("clas/{id}/membros/{userId}")]
+    public async Task<IActionResult> RemoverMembroCla(Guid id, Guid userId)
+    {
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.Id == id);
+        if (cla == null)
+            return NotFound();
+
+        if (userId == cla.LiderUserId)
+            return BadRequest("O líder não pode ser removido — desfaça o clã.");
+
+        var membro = await _context.ClaMembros.FirstOrDefaultAsync(m => m.ClaId == id && m.UserId == userId);
+        if (membro == null)
+            return NotFound();
+
+        _context.ClaMembros.Remove(membro);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("clas/{id}")]
+    public async Task<IActionResult> DesfazerCla(Guid id)
+    {
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.Id == id);
+        if (cla == null)
+            return NotFound();
+
+        await _context.ClaMembros.Where(m => m.ClaId == id).ExecuteDeleteAsync();
+        await _context.ClaSolicitacoes.Where(s => s.ClaId == id).ExecuteDeleteAsync();
+
+        var convitesDoCla = await _context.ClaConvites.Where(c => c.ClaId == id).ToListAsync();
+        foreach (var convite in convitesDoCla)
+            await RemoverNotificacaoDoConvite(convite.Id);
+
+        _context.ClaConvites.RemoveRange(convitesDoCla);
+        _context.Clas.Remove(cla);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private async Task RemoverNotificacaoDoConvite(Guid conviteId)
+    {
+        var notificacao = await _context.Notificacoes.FirstOrDefaultAsync(n => n.ClaConviteId == conviteId);
+        if (notificacao == null)
+            return;
+
+        _context.NotificacaoDestinatarios.RemoveRange(
+            _context.NotificacaoDestinatarios.Where(d => d.NotificacaoId == notificacao.Id));
+
+        _context.NotificacaoLeituras.RemoveRange(
+            _context.NotificacaoLeituras.Where(l => l.NotificacaoId == notificacao.Id));
+
+        _context.Notificacoes.Remove(notificacao);
+    }
+
     private static AdminUsuarioDto MapDto(User user)
     {
         var vipNivel = VipTiers.NivelEfetivo(user.VipNivel, user.VipExpiraEm);

@@ -1,5 +1,6 @@
 import { authHeaders } from "./api";
 import { AdminUsuario, AdminUsuarioDetalhe } from "../models/AdminUsuario";
+import { AdminCla, AdminClaDetalhe } from "../models/AdminCla";
 
 const API_URL = "/api/admin";
 
@@ -147,4 +148,42 @@ export async function removerBan(id: string): Promise<AdminUsuario> {
         throw new Error(await response.text() || "Erro ao remover banimento");
 
     return response.json();
+}
+
+export async function getClasAdmin(): Promise<AdminCla[]> {
+    const response = await fetch(`${API_URL}/clas`, { headers: authHeaders() });
+
+    if (!response.ok)
+        throw new Error("Erro ao buscar clãs");
+
+    return response.json();
+}
+
+export async function getClaAdmin(id: string): Promise<AdminClaDetalhe> {
+    const response = await fetch(`${API_URL}/clas/${id}`, { headers: authHeaders() });
+
+    if (!response.ok)
+        throw new Error("Erro ao buscar clã");
+
+    return response.json();
+}
+
+export async function removerMembroClaAdmin(claId: string, userId: string) {
+    const response = await fetch(`${API_URL}/clas/${claId}/membros/${userId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        throw new Error(await response.text() || "Erro ao remover membro");
+}
+
+export async function desfazerClaAdmin(claId: string) {
+    const response = await fetch(`${API_URL}/clas/${claId}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+    });
+
+    if (!response.ok)
+        throw new Error(await response.text() || "Erro ao desfazer clã");
 }

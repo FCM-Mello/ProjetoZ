@@ -7,7 +7,7 @@ import { ClaResumo, ClaDetalhe, ClaBuscaJogador, CriarClaRequest } from "../mode
 import {
     getClas, getMeuCla, criarCla, solicitarEntrada,
     aprovarSolicitacao, removerSolicitacao, promoverAdmin, removerAdmin,
-    sairDoCla, desfazerCla, buscarJogadorParaConvidar, convidarParaCla,
+    removerMembro, sairDoCla, desfazerCla, buscarJogadorParaConvidar, convidarParaCla,
 } from "../services/clasApi";
 import Badge from "../components/Badge";
 import EstadoVazio from "../components/EstadoVazio";
@@ -188,6 +188,23 @@ export default function Cla() {
             await carregar();
         } catch (e) {
             mostrarErro(e instanceof Error ? e.message : "Erro ao remover admin.");
+        } finally {
+            setProcessando(null);
+        }
+    }
+
+    async function handleRemoverMembro(userId: string, nome: string) {
+        if (!meuCla) return;
+        if (!confirm(`Remover ${nome} do clã?`)) return;
+
+        setProcessando(userId);
+
+        try {
+            await removerMembro(meuCla.id, userId);
+            sucesso(`${nome} foi removido do clã.`);
+            await carregar();
+        } catch (e) {
+            mostrarErro(e instanceof Error ? e.message : "Erro ao remover membro.");
         } finally {
             setProcessando(null);
         }
@@ -406,6 +423,16 @@ export default function Cla() {
                                                     onClick={() => handleRemoverAdmin(m.userId!)}
                                                 >
                                                     Remover admin
+                                                </button>
+                                            )}
+
+                                            {meuCla.souLider && (
+                                                <button
+                                                    className="btnClaSecundarioPerigo"
+                                                    disabled={processando === m.userId}
+                                                    onClick={() => handleRemoverMembro(m.userId!, m.nome)}
+                                                >
+                                                    Remover do clã
                                                 </button>
                                             )}
                                         </div>

@@ -215,4 +215,111 @@ public class AdminControllerTests : IDisposable
         Assert.Single(detalhe.Compras);
         Assert.Equal("Item de teste", detalhe.Compras[0].Descricao);
     }
+
+    private Cla CriarCla(User lider, string nome = "Clã de Teste")
+    {
+        var cla = new Cla { Id = Guid.NewGuid(), Nome = nome, LiderUserId = lider.Id, LiderSteamId = lider.Profile!.SteamId! };
+        _db.Context.Clas.Add(cla);
+        _db.Context.ClaMembros.Add(new ClaMembro { Id = Guid.NewGuid(), ClaId = cla.Id, UserId = lider.Id, SteamId = lider.Profile.SteamId!, IsAdmin = true });
+        _db.Context.SaveChanges();
+
+        return cla;
+    }
+
+    [Fact]
+    public async Task GetClas_RetornaContagemDeMembrosELiderNome()
+    {
+        var lider = CriarUsuarioComum();
+        var cla = CriarCla(lider, nome: "Legião");
+
+        var membro = CriarUsuarioComum();
+        _db.Context.ClaMembros.Add(new ClaMembro { Id = Guid.NewGuid(), ClaId = cla.Id, UserId = membro.Id, SteamId = membro.Profile!.SteamId! });
+        await _db.Context.SaveChangesAsync();
+
+        var admin = CriarAdmin();
+        var controller = new AdminController(_db.Context);
+        controller.ComoUsuario(admin.Id);
+
+        var resultado = await controller.GetClas();
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var lista = Assert.IsAssignableFrom<IEnumerable<AdminClaDto>>(ok.Value).ToList();
+
+        var dto = Assert.Single(lista);
+        Assert.Equal("Legião", dto.Nome);
+        Assert.Equal(2, dto.TotalMembros);
+        Assert.Equal(lider.Profile!.Name, dto.LiderNome);
+    }
+
+    [Fact]
+    public async Task GetCla_RetornaMembrosComPapeis()
+    {
+        var lider = CriarUsuarioComum();
+        var cla = CriarCla(lider);
+
+        var admin = CriarAdmin();
+        var controller = new AdminController(_db.Context);
+        controller.ComoUsuario(admin.Id);
+
+        var resultado = await controller.GetCla(cla.Id);
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var detalhe = Assert.IsType<AdminClaDetalheDto>(ok.Value);
+
+        var membro = Assert.Single(detalhe.Membros);
+        Assert.True(membro.IsLider);
+    }
+
+    [Fact]
+    public async Task RemoverMembroCla_MembroComum_Remove()
+    {
+        var lider = CriarUsuarioComum();
+        var cla = CriarCla(lider);
+
+        var membro = CriarUsuarioComum();
+        _db.Context.ClaMembros.Add(new ClaMembro { Id = Guid.NewGuid(), ClaId = cla.Id, UserId = membro.Id, SteamId = membro.Profile!.SteamId! });
+        await _db.Context.SaveChangesAsync();
+
+        var admin = CriarAdmin();
+        var controller = new AdminController(_db.Context);
+        controller.ComoUsuario(admin.Id);
+
+        var resultado = await controller.RemoverMembroCla(cla.Id, membro.Id);
+
+        Assert.IsType<NoContentResult>(resultado);
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == membro.Id));
+    }
+
+    [Fact]
+    public async Task RemoverMembroCla_TentaRemoverOLider_RetornaBadRequest()
+    {
+        var lider = CriarUsuarioComum();
+        var cla = CriarCla(lider);
+
+        var admin = CriarAdmin();
+        var controller = new AdminController(_db.Context);
+        controller.ComoUsuario(admin.Id);
+
+        var resultado = await controller.RemoverMembroCla(cla.Id, lider.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+        Assert.True(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == lider.Id));
+    }
+
+    [Fact]
+    public async Task DesfazerCla_RemoveClaEMembros()
+    {
+        var lider = CriarUsuarioComum();
+        var cla = CriarCla(lider);
+
+        var admin = CriarAdmin();
+        var controller = new AdminController(_db.Context);
+        controller.ComoUsuario(admin.Id);
+
+        var resultado = await controller.DesfazerCla(cla.Id);
+
+        Assert.IsType<NoContentResult>(resultado);
+        Assert.False(await _db.Context.Clas.AnyAsync());
+        Assert.False(await _db.Context.ClaMembros.AnyAsync());
+    }
 }

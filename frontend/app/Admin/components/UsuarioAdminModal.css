@@ -24,6 +24,15 @@
     border: 2px solid var(--color-accent);
 }
 
+.admin-modal-avatar-vazio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--color-surface-alt);
+    font-size: 22px;
+}
+
 .admin-modal-nome {
     font-size: 18px;
     text-transform: none;

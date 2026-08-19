@@ -268,6 +268,60 @@ public class ClasControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task RemoverMembro_ChamadoPeloLider_Remove()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        var membro = CriarUsuario();
+        AdicionarMembro(cla, membro);
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.RemoverMembro(cla.Id, membro.Id);
+
+        Assert.IsType<NoContentResult>(resultado);
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == membro.Id));
+    }
+
+    [Fact]
+    public async Task RemoverMembro_ChamadoPorAdminComum_RetornaForbid()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        var admin = CriarUsuario();
+        AdicionarMembro(cla, admin, isAdmin: true);
+
+        var membro = CriarUsuario();
+        AdicionarMembro(cla, membro);
+
+        var controller = CriarController();
+        controller.ComoUsuario(admin.Id);
+
+        var resultado = await controller.RemoverMembro(cla.Id, membro.Id);
+
+        Assert.IsType<ForbidResult>(resultado);
+        Assert.True(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == membro.Id));
+    }
+
+    [Fact]
+    public async Task RemoverMembro_TentaRemoverOProprioLider_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.RemoverMembro(cla.Id, lider.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+        Assert.True(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == lider.Id));
+    }
+
+    [Fact]
     public async Task Sair_MembroComum_Remove()
     {
         var lider = CriarUsuario();
