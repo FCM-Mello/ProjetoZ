@@ -14,6 +14,12 @@ export interface ClaMembro {
     avatar: string;
     isLider: boolean;
     isAdmin: boolean;
+    kills: number;
+    deaths: number;
+    kd: number;
+    kothCompletados: number;
+    zumbiKills: number;
+    segundosJogados: number;
 }
 
 export interface ClaSolicitacao {
@@ -22,6 +28,15 @@ export interface ClaSolicitacao {
     nome: string;
     avatar: string;
     criadoEm: string;
+}
+
+export interface ClaEstatisticas {
+    totalKills: number;
+    totalDeaths: number;
+    kdMedio: number;
+    totalKothCompletados: number;
+    totalZumbiKills: number;
+    totalSegundosJogados: number;
 }
 
 export interface ClaDetalhe {
@@ -35,6 +50,7 @@ export interface ClaDetalhe {
     souLider: boolean;
     souAdmin: boolean;
     tenhoSolicitacaoPendente: boolean;
+    estatisticas: ClaEstatisticas;
 }
 
 export interface ClaBuscaJogador {

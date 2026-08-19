@@ -608,8 +608,10 @@ public class ClasController : ControllerBase
 
         var membrosBrutos = await (
             from m in _context.ClaMembros
-            join u in _context.Users on m.UserId equals u.Id into gj
-            from u in gj.DefaultIfEmpty()
+            join u in _context.Users on m.UserId equals u.Id into gjUsers
+            from u in gjUsers.DefaultIfEmpty()
+            join r in _context.PlayerRankings on m.UserId equals r.UserId into gjRanking
+            from r in gjRanking.DefaultIfEmpty()
             where m.ClaId == claId
             select new
             {
@@ -618,6 +620,11 @@ public class ClasController : ControllerBase
                 m.IsAdmin,
                 Nome = u != null && u.Profile != null ? u.Profile.Name : null,
                 Avatar = u != null && u.Profile != null ? u.Profile.Avatar : null,
+                Kills = r != null ? r.Kills : 0,
+                Deaths = r != null ? r.Deaths : 0,
+                KothCompletados = r != null ? r.KothCompletados : 0,
+                ZumbiKills = r != null ? r.ZumbiKills : 0,
+                SegundosJogados = r != null ? r.SegundosJogados : 0,
             }
         ).ToListAsync();
 
@@ -642,11 +649,26 @@ public class ClasController : ControllerBase
                     Avatar = m.Avatar ?? string.Empty,
                     IsLider = m.SteamId == cla.LiderSteamId,
                     IsAdmin = m.IsAdmin,
+                    Kills = m.Kills,
+                    Deaths = m.Deaths,
+                    Kd = RankingCalculos.CalcularKd(m.Kills, m.Deaths),
+                    KothCompletados = m.KothCompletados,
+                    ZumbiKills = m.ZumbiKills,
+                    SegundosJogados = m.SegundosJogados,
                 })
                 .OrderByDescending(m => m.IsLider)
                 .ThenByDescending(m => m.IsAdmin)
                 .ThenBy(m => m.Nome)
                 .ToList(),
+            Estatisticas = new ClaEstatisticasDto
+            {
+                TotalKills = membrosBrutos.Sum(m => m.Kills),
+                TotalDeaths = membrosBrutos.Sum(m => m.Deaths),
+                KdMedio = RankingCalculos.CalcularKd(membrosBrutos.Sum(m => m.Kills), membrosBrutos.Sum(m => m.Deaths)),
+                TotalKothCompletados = membrosBrutos.Sum(m => m.KothCompletados),
+                TotalZumbiKills = membrosBrutos.Sum(m => m.ZumbiKills),
+                TotalSegundosJogados = membrosBrutos.Sum(m => m.SegundosJogados),
+            },
         };
 
         if (souAdmin)

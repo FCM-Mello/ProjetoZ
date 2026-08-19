@@ -44,6 +44,21 @@ namespace ProjetoZ.Application.DTOs
         public bool IsLider { get; set; }
 
         public bool IsAdmin { get; set; }
+
+        // Estatísticas de PlayerRanking — zeradas se o membro nunca
+        // sincronizou nenhum dado (ainda não jogou, ou é membro de origem
+        // mod sem conta no site).
+        public int Kills { get; set; }
+
+        public int Deaths { get; set; }
+
+        public double Kd { get; set; }
+
+        public int KothCompletados { get; set; }
+
+        public int ZumbiKills { get; set; }
+
+        public int SegundosJogados { get; set; }
     }
 
     // GET /api/clas/{id}/buscar-jogador — resultado pra líder/admin escolher
@@ -93,5 +108,24 @@ namespace ProjetoZ.Application.DTOs
         public bool SouAdmin { get; set; }
 
         public bool TenhoSolicitacaoPendente { get; set; }
+
+        // Soma das estatísticas de todos os membros — calculado aqui pra
+        // não duplicar a lógica no frontend.
+        public ClaEstatisticasDto Estatisticas { get; set; } = new();
+    }
+
+    public class ClaEstatisticasDto
+    {
+        public int TotalKills { get; set; }
+
+        public int TotalDeaths { get; set; }
+
+        public double KdMedio { get; set; }
+
+        public int TotalKothCompletados { get; set; }
+
+        public int TotalZumbiKills { get; set; }
+
+        public int TotalSegundosJogados { get; set; }
     }
 }

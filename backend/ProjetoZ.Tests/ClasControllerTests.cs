@@ -375,6 +375,40 @@ public class ClasControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task GetMeu_TrazEstatisticasSomadasDosMembros()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        _db.Context.PlayerRankings.Add(new PlayerRanking { Id = Guid.NewGuid(), UserId = lider.Id, Kills = 10, Deaths = 2, ZumbiKills = 100, KothCompletados = 1, SegundosJogados = 3600 });
+
+        var membro = CriarUsuario();
+        AdicionarMembro(cla, membro);
+        _db.Context.PlayerRankings.Add(new PlayerRanking { Id = Guid.NewGuid(), UserId = membro.Id, Kills = 5, Deaths = 3, ZumbiKills = 50, KothCompletados = 2, SegundosJogados = 1800 });
+
+        // Membro de origem mod sem PlayerRanking nenhum — não deve quebrar a soma.
+        _db.Context.ClaMembros.Add(new ClaMembro { Id = Guid.NewGuid(), ClaId = cla.Id, UserId = null, SteamId = "76500000000008888" });
+        await _db.Context.SaveChangesAsync();
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.GetMeu();
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var dto = Assert.IsType<ClaDetalheDto>(ok.Value);
+
+        Assert.Equal(15, dto.Estatisticas.TotalKills);
+        Assert.Equal(5, dto.Estatisticas.TotalDeaths);
+        Assert.Equal(150, dto.Estatisticas.TotalZumbiKills);
+        Assert.Equal(3, dto.Estatisticas.TotalKothCompletados);
+        Assert.Equal(5400, dto.Estatisticas.TotalSegundosJogados);
+
+        var membroDto = dto.Membros.Single(m => m.UserId == membro.Id);
+        Assert.Equal(5, membroDto.Kills);
+        Assert.Equal(50, membroDto.ZumbiKills);
+    }
+
+    [Fact]
     public async Task GetPorId_MembroComumNaoVeSolicitacoes()
     {
         var lider = CriarUsuario();

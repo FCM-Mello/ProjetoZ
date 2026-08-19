@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRequireAuth } from "../hooks/useRequireAuth";
 import { useToast } from "../contexts/ToastContext";
 import { ClaResumo, ClaDetalhe, ClaBuscaJogador, CriarClaRequest } from "../models/Cla";
@@ -14,6 +14,22 @@ import EstadoVazio from "../components/EstadoVazio";
 import Skeleton from "../components/Skeleton";
 import ClaCriarModal from "./components/ClaCriarModal";
 import "./page.css";
+
+type AbaRankingCla = "kd" | "koth" | "zumbis" | "tempo";
+
+const ABAS_RANKING_CLA: { id: AbaRankingCla; label: string; icone: string }[] = [
+    { id: "kd", label: "K/D", icone: "⚔️" },
+    { id: "koth", label: "KOTH", icone: "🏆" },
+    { id: "zumbis", label: "Zumbis", icone: "🧟" },
+    { id: "tempo", label: "Tempo", icone: "⏱️" },
+];
+
+function formatarTempoCla(segundos: number) {
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+
+    return horas > 0 ? `${horas}h ${minutos}min` : `${minutos}min`;
+}
 
 export default function Cla() {
     useRequireAuth();
@@ -31,6 +47,24 @@ export default function Cla() {
     const [resultadosConvite, setResultadosConvite] = useState<ClaBuscaJogador[]>([]);
     const [buscandoConvite, setBuscandoConvite] = useState(false);
     const [convidados, setConvidados] = useState<Set<string>>(new Set());
+
+    const [abaRanking, setAbaRanking] = useState<AbaRankingCla>("kd");
+
+    const membrosRankeados = useMemo(() => {
+        if (!meuCla) return [];
+        const copia = [...meuCla.membros];
+
+        switch (abaRanking) {
+            case "koth":
+                return copia.sort((a, b) => b.kothCompletados - a.kothCompletados || b.kd - a.kd);
+            case "zumbis":
+                return copia.sort((a, b) => b.zumbiKills - a.zumbiKills || b.kd - a.kd);
+            case "tempo":
+                return copia.sort((a, b) => b.segundosJogados - a.segundosJogados || b.kd - a.kd);
+            default:
+                return copia.sort((a, b) => b.kd - a.kd || b.kothCompletados - a.kothCompletados);
+        }
+    }, [meuCla, abaRanking]);
 
     useEffect(() => {
         carregar();
@@ -204,8 +238,8 @@ export default function Cla() {
         return (
             <main className="containerCla">
                 <h2 className="section-title">Clã</h2>
-                <div className="claGridLista">
-                    {[1, 2, 3].map(i => <Skeleton key={i} height={180} borderRadius={12} />)}
+                <div className="claListaBrowse">
+                    {[1, 2, 3].map(i => <Skeleton key={i} height={72} borderRadius={10} />)}
                 </div>
             </main>
         );
@@ -232,6 +266,84 @@ export default function Cla() {
                             <span className="claTotalMembros">{meuCla.membros.length} {meuCla.membros.length === 1 ? "membro" : "membros"}</span>
                         </div>
                     </div>
+
+                    <section className="claSecao">
+                        <h4>Estatísticas do Clã</h4>
+                        <div className="claStatsGrid">
+                            <div className="claStatTile">
+                                <span className="claStatIcone">⚔️</span>
+                                <span className="claStatValor">{meuCla.estatisticas.kdMedio.toFixed(2)}</span>
+                                <span className="claStatLabel">K/D médio</span>
+                            </div>
+                            <div className="claStatTile">
+                                <span className="claStatIcone">💀</span>
+                                <span className="claStatValor">{meuCla.estatisticas.totalKills}</span>
+                                <span className="claStatLabel">Kills</span>
+                            </div>
+                            <div className="claStatTile">
+                                <span className="claStatIcone">☠️</span>
+                                <span className="claStatValor">{meuCla.estatisticas.totalDeaths}</span>
+                                <span className="claStatLabel">Mortes</span>
+                            </div>
+                            <div className="claStatTile">
+                                <span className="claStatIcone">🏆</span>
+                                <span className="claStatValor">{meuCla.estatisticas.totalKothCompletados}</span>
+                                <span className="claStatLabel">KOTH completados</span>
+                            </div>
+                            <div className="claStatTile">
+                                <span className="claStatIcone">🧟</span>
+                                <span className="claStatValor">{meuCla.estatisticas.totalZumbiKills}</span>
+                                <span className="claStatLabel">Zumbis mortos</span>
+                            </div>
+                            <div className="claStatTile">
+                                <span className="claStatIcone">⏱️</span>
+                                <span className="claStatValor">{formatarTempoCla(meuCla.estatisticas.totalSegundosJogados)}</span>
+                                <span className="claStatLabel">Tempo de sobrevivência</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="claSecao">
+                        <h4>Ranking do Clã</h4>
+                        <nav className="claRankingAbas">
+                            {ABAS_RANKING_CLA.map(a => (
+                                <button
+                                    key={a.id}
+                                    className={`claRankingAba ${abaRanking === a.id ? "claRankingAba-ativa" : ""}`}
+                                    onClick={() => setAbaRanking(a.id)}
+                                >
+                                    {a.icone} {a.label}
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="claRankingLista">
+                            {membrosRankeados.map((m, i) => (
+                                <div key={m.userId ?? `${m.nome}-${i}`} className="claRankingItem">
+                                    <span className="claRankingPosicao">{i + 1}º</span>
+                                    <img src={m.avatar} alt={m.nome} className="claAvatar" />
+                                    <span className="claNomeItem">{m.nome}</span>
+                                    {m.isLider && <Badge tom="accent">Líder</Badge>}
+                                    {!m.isLider && m.isAdmin && <Badge tom="info">Admin</Badge>}
+
+                                    <div className="claRankingStats">
+                                        <span className={`claRankingStatDestaque ${abaRanking === "kd" ? "claRankingStatDestaque-ativa" : ""}`}>
+                                            K/D {m.kd.toFixed(2)}
+                                        </span>
+                                        <span className={`claRankingStatDestaque ${abaRanking === "koth" ? "claRankingStatDestaque-ativa" : ""}`}>
+                                            🏆 {m.kothCompletados}
+                                        </span>
+                                        <span className={`claRankingStatDestaque ${abaRanking === "zumbis" ? "claRankingStatDestaque-ativa" : ""}`}>
+                                            🧟 {m.zumbiKills}
+                                        </span>
+                                        <span className={`claRankingStatDestaque ${abaRanking === "tempo" ? "claRankingStatDestaque-ativa" : ""}`}>
+                                            ⏱️ {formatarTempoCla(m.segundosJogados)}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
 
                     {meuCla.souAdmin && meuCla.solicitacoes.length > 0 && (
                         <section className="claSecao">
@@ -362,22 +474,28 @@ export default function Cla() {
                             descricao="Seja o primeiro a criar um."
                         />
                     ) : (
-                        <div className="claGridLista">
+                        <ul className="claListaBrowse">
                             {lista.map(c => (
-                                <div key={c.id} className="claCard">
-                                    {c.estandarte ? (
-                                        <img src={c.estandarte} alt={c.nome} className="claCardEstandarte" />
-                                    ) : (
-                                        <div className="claCardEstandarte claEstandarte-vazio">🛡️</div>
-                                    )}
-
-                                    <span className="claCardNome">{c.nome}</span>
-                                    {c.descricao && <p className="claCardDescricao">{c.descricao}</p>}
-
-                                    <div className="claCardMeta">
-                                        <span>{c.totalMembros} {c.totalMembros === 1 ? "membro" : "membros"}</span>
-                                        <span>Líder: {c.liderNome}</span>
+                                <li key={c.id} className="claLinha">
+                                    <div className="claLinhaEmblemaCaixa">
+                                        {c.estandarte ? (
+                                            <img src={c.estandarte} alt={c.nome} className="claLinhaEmblema" />
+                                        ) : (
+                                            <div className="claLinhaEmblema claLinhaEmblema-vazio">
+                                                {c.nome.slice(0, 2).toUpperCase()}
+                                            </div>
+                                        )}
                                     </div>
+
+                                    <div className="claLinhaInfo">
+                                        <span className="claLinhaNome">{c.nome}</span>
+                                        {c.descricao && <p className="claLinhaDescricao">{c.descricao}</p>}
+                                        <span className="claLinhaLider">Líder: {c.liderNome}</span>
+                                    </div>
+
+                                    <span className="claLinhaMembros">
+                                        {c.totalMembros} {c.totalMembros === 1 ? "membro" : "membros"}
+                                    </span>
 
                                     <button
                                         className="btnClaSolicitar"
@@ -386,9 +504,9 @@ export default function Cla() {
                                     >
                                         {solicitados.has(c.id) ? "Solicitação enviada" : "Solicitar entrada"}
                                     </button>
-                                </div>
+                                </li>
                             ))}
-                        </div>
+                        </ul>
                     )}
                 </>
             )}
