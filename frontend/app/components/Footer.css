@@ -1,12 +1,15 @@
 .footer{
 
-    height:70px;
+    min-height:70px;
 
     display:flex;
+    flex-wrap:wrap;
 
     justify-content:center;
     align-items:center;
-    gap:24px;
+    gap:10px 24px;
+
+    padding:14px 20px;
 
     color: var(--color-text-muted);
 
@@ -31,4 +34,12 @@
 
 .footerLink:hover{
     color: var(--color-accent-strong);
+}
+
+@media (max-width: 480px){
+    .footer{
+        gap:8px 16px;
+
+        font-size:11px;
+    }
 }

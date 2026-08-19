@@ -99,6 +99,7 @@ h1, h2, h3, h4{
 
     min-height:500px;
 
+    margin:0 auto;
     align-self:center;
 
     background: var(--color-surface);
