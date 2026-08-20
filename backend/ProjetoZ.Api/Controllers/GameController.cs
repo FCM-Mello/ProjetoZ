@@ -648,6 +648,82 @@ public class GameController : ControllerBase
         });
     }
 
+    // Chamado quando o mod detecta que o jogador saiu ou foi expulso do
+    // grupo no jogo. Se não era o líder, só sai. Se era, promove o próximo
+    // na fila — primeiro tenta o admin mais antigo (por EntrouEm), senão o
+    // membro comum mais antigo; se não sobrar ninguém, o clã é apagado
+    // (mesma limpeza de solicitações/convites/notificações do Desfazer do
+    // site). Vale tanto pra clã de origem mod quanto de origem site — a
+    // verdade do jogo vence igual no resto dessa integração.
+    [HttpPost("grupos/expulsar")]
+    public async Task<IActionResult> ExpulsarDoGrupo(PlayerLookupRequest request)
+    {
+        if (!ValidarApiKey(request.ApiKey))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("SteamId é obrigatório.");
+
+        var membro = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == request.SteamId);
+        if (membro == null)
+            return NotFound();
+
+        var cla = await _context.Clas.FirstAsync(c => c.Id == membro.ClaId);
+        var eraLider = cla.LiderSteamId == request.SteamId;
+
+        _context.ClaMembros.Remove(membro);
+
+        if (!eraLider)
+        {
+            await _context.SaveChangesAsync();
+            return Ok(new { claApagado = false, novoLiderSteamId = (string?)null });
+        }
+
+        var candidato = await _context.ClaMembros
+            .Where(m => m.ClaId == cla.Id && m.Id != membro.Id)
+            .OrderByDescending(m => m.IsAdmin)
+            .ThenBy(m => m.EntrouEm)
+            .FirstOrDefaultAsync();
+
+        if (candidato == null)
+        {
+            await _context.ClaSolicitacoes.Where(s => s.ClaId == cla.Id).ExecuteDeleteAsync();
+
+            var convitesDoCla = await _context.ClaConvites.Where(c => c.ClaId == cla.Id).ToListAsync();
+            foreach (var convite in convitesDoCla)
+                await RemoverNotificacaoDoConvite(convite.Id);
+
+            _context.ClaConvites.RemoveRange(convitesDoCla);
+            _context.Clas.Remove(cla);
+
+            await _context.SaveChangesAsync();
+            return Ok(new { claApagado = true, novoLiderSteamId = (string?)null });
+        }
+
+        candidato.IsAdmin = true;
+        cla.LiderSteamId = candidato.SteamId;
+        cla.LiderUserId = candidato.UserId;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { claApagado = false, novoLiderSteamId = candidato.SteamId });
+    }
+
+    private async Task RemoverNotificacaoDoConvite(Guid conviteId)
+    {
+        var notificacao = await _context.Notificacoes.FirstOrDefaultAsync(n => n.ClaConviteId == conviteId);
+        if (notificacao == null)
+            return;
+
+        _context.NotificacaoDestinatarios.RemoveRange(
+            _context.NotificacaoDestinatarios.Where(d => d.NotificacaoId == notificacao.Id));
+
+        _context.NotificacaoLeituras.RemoveRange(
+            _context.NotificacaoLeituras.Where(l => l.NotificacaoId == notificacao.Id));
+
+        _context.Notificacoes.Remove(notificacao);
+    }
+
     private bool ValidarApiKey(string? providedKey)
     {
         var apiKey = _configuration["GameServer:ApiKey"];

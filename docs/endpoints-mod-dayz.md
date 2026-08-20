@@ -308,6 +308,26 @@ Leitura sob demanda (tela de grupo no jogo).
 
 - "Sem grupo" é um estado válido — sempre `200`, nunca `404`.
 
+### `POST /api/game/grupos/expulsar`
+
+Chamado quando o mod detecta que o jogador saiu ou foi expulso do grupo no jogo — remove o vínculo e, se era o líder, promove o próximo automaticamente. Vale tanto pra clã de origem mod quanto de origem site.
+
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
+
+// response 200
+{ "claApagado": false, "novoLiderSteamId": "76561198000000111" }
+```
+
+- `404` se `steamId` não está em nenhum grupo/clã no momento.
+- Se o jogador removido **não** era o líder: só sai do grupo, `novoLiderSteamId` vem `null`.
+- Se **era** o líder, promove nessa ordem:
+  1. O admin com mais tempo de grupo (menor `EntrouEm`).
+  2. Se não tiver admin, o membro comum com mais tempo de grupo.
+  3. Se não sobrar ninguém, o clã inteiro é apagado (`claApagado: true`) — junto com solicitações e convites pendentes.
+- O promovido sempre vira admin (`isAdmin = true`), além de líder.
+
 ## Resumo dos endpoints
 
 | Endpoint | Uso |
@@ -324,3 +344,4 @@ Leitura sob demanda (tela de grupo no jogo).
 | `POST /api/game/ranking/jogador` | Resumo de ranking de 1 jogador |
 | `POST /api/game/grupos/sync` | Sync absoluto de todos os grupos ativos |
 | `POST /api/game/grupos/jogador` | Grupo atual de 1 jogador, se tiver |
+| `POST /api/game/grupos/expulsar` | Remover 1 jogador do grupo, promovendo líder novo se preciso |

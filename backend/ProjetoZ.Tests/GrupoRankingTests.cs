@@ -288,4 +288,130 @@ public class GrupoRankingTests : IDisposable
 
         Assert.False(dto.TemGrupo);
     }
+
+    private Cla CriarClaDireto(string liderSteamId, string nome = "Clã de Teste")
+    {
+        var cla = new Cla { Id = Guid.NewGuid(), Nome = nome, LiderSteamId = liderSteamId, CriadoEm = DateTime.UtcNow };
+        _db.Context.Clas.Add(cla);
+        _db.Context.SaveChanges();
+
+        return cla;
+    }
+
+    private void AdicionarMembroDireto(Cla cla, string steamId, bool isAdmin, DateTime entrouEm)
+    {
+        _db.Context.ClaMembros.Add(new ClaMembro { Id = Guid.NewGuid(), ClaId = cla.Id, SteamId = steamId, IsAdmin = isAdmin, EntrouEm = entrouEm });
+        _db.Context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task ExpulsarDoGrupo_ApiKeyInvalida_RetornaUnauthorized()
+    {
+        var controller = CriarController();
+
+        var resultado = await controller.ExpulsarDoGrupo(new PlayerLookupRequest { ApiKey = "chave-errada", SteamId = SteamIdJogador });
+
+        Assert.IsType<UnauthorizedResult>(resultado);
+    }
+
+    [Fact]
+    public async Task ExpulsarDoGrupo_JogadorSemGrupo_RetornaNotFound()
+    {
+        var controller = CriarController();
+
+        var resultado = await controller.ExpulsarDoGrupo(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
+
+        Assert.IsType<NotFoundResult>(resultado);
+    }
+
+    [Fact]
+    public async Task ExpulsarDoGrupo_MembroComum_SoRemoveMantemLider()
+    {
+        var cla = CriarClaDireto(SteamIdJogador);
+        AdicionarMembroDireto(cla, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow.AddDays(-2));
+        AdicionarMembroDireto(cla, "76500000000000456", isAdmin: false, entrouEm: DateTime.UtcNow.AddDays(-1));
+
+        var controller = CriarController();
+
+        var resultado = await controller.ExpulsarDoGrupo(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = "76500000000000456" });
+
+        Assert.IsType<OkObjectResult>(resultado);
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.SteamId == "76500000000000456"));
+
+        var claAtualizado = await _db.Context.Clas.SingleAsync(c => c.Id == cla.Id);
+        Assert.Equal(SteamIdJogador, claAtualizado.LiderSteamId);
+    }
+
+    [Fact]
+    public async Task ExpulsarDoGrupo_LiderComAdminDisponivel_PromoveAdminMaisAntigo()
+    {
+        const string admin1 = "76500000000000456";
+        const string admin2 = "76500000000000789";
+        const string membroComum = "76500000000000111";
+
+        var cla = CriarClaDireto(SteamIdJogador);
+        AdicionarMembroDireto(cla, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow.AddDays(-5));
+        // Membro comum entrou antes dos admins, mas admin tem prioridade mesmo assim.
+        AdicionarMembroDireto(cla, membroComum, isAdmin: false, entrouEm: DateTime.UtcNow.AddDays(-4));
+        AdicionarMembroDireto(cla, admin2, isAdmin: true, entrouEm: DateTime.UtcNow.AddDays(-2));
+        AdicionarMembroDireto(cla, admin1, isAdmin: true, entrouEm: DateTime.UtcNow.AddDays(-3));
+
+        var controller = CriarController();
+
+        var resultado = await controller.ExpulsarDoGrupo(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var valor = ok.Value!;
+        var novoLider = valor.GetType().GetProperty("novoLiderSteamId")!.GetValue(valor);
+        Assert.Equal(admin1, novoLider);
+
+        var claAtualizado = await _db.Context.Clas.SingleAsync(c => c.Id == cla.Id);
+        Assert.Equal(admin1, claAtualizado.LiderSteamId);
+
+        var novoLiderMembro = await _db.Context.ClaMembros.SingleAsync(m => m.SteamId == admin1);
+        Assert.True(novoLiderMembro.IsAdmin);
+    }
+
+    [Fact]
+    public async Task ExpulsarDoGrupo_LiderSemAdminComMembroComum_PromoveMembroMaisAntigo()
+    {
+        const string membro1 = "76500000000000456";
+        const string membro2 = "76500000000000789";
+
+        var cla = CriarClaDireto(SteamIdJogador);
+        AdicionarMembroDireto(cla, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow.AddDays(-5));
+        AdicionarMembroDireto(cla, membro2, isAdmin: false, entrouEm: DateTime.UtcNow.AddDays(-2));
+        AdicionarMembroDireto(cla, membro1, isAdmin: false, entrouEm: DateTime.UtcNow.AddDays(-3));
+
+        var controller = CriarController();
+
+        var resultado = await controller.ExpulsarDoGrupo(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
+
+        Assert.IsType<OkObjectResult>(resultado);
+
+        var claAtualizado = await _db.Context.Clas.SingleAsync(c => c.Id == cla.Id);
+        Assert.Equal(membro1, claAtualizado.LiderSteamId);
+
+        var novoLiderMembro = await _db.Context.ClaMembros.SingleAsync(m => m.SteamId == membro1);
+        Assert.True(novoLiderMembro.IsAdmin);
+    }
+
+    [Fact]
+    public async Task ExpulsarDoGrupo_LiderUltimoMembro_ApagaCla()
+    {
+        var cla = CriarClaDireto(SteamIdJogador);
+        AdicionarMembroDireto(cla, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow);
+
+        var controller = CriarController();
+
+        var resultado = await controller.ExpulsarDoGrupo(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
+
+        var ok = Assert.IsType<OkObjectResult>(resultado);
+        var valor = ok.Value!;
+        var claApagado = (bool)valor.GetType().GetProperty("claApagado")!.GetValue(valor)!;
+        Assert.True(claApagado);
+
+        Assert.False(await _db.Context.Clas.AnyAsync(c => c.Id == cla.Id));
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.ClaId == cla.Id));
+    }
 }
