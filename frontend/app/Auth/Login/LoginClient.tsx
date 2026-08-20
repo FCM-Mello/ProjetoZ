@@ -8,21 +8,23 @@ export default function LoginClient() {
     const banido = searchParams.get("erro") === "banido";
 
     return (
-        <div className="center-card">
-            <h2>ArkZ</h2>
+        <div className="landingViewport">
+            <div className="center-card">
+                <h2>ArkZ</h2>
 
-            {banido && (
-                <p style={{ color: "var(--color-danger-strong)", fontSize: 13 }}>
-                    Essa conta está banida. Entre em contato com a administração se achar que isso é um engano.
-                </p>
-            )}
+                {banido && (
+                    <p style={{ color: "var(--color-danger-strong)", fontSize: 13 }}>
+                        Essa conta está banida. Entre em contato com a administração se achar que isso é um engano.
+                    </p>
+                )}
 
-            <button
-                className="buttonConfirm"
-                onClick={loginSteam}
-            >
-                Entrar com Steam
-            </button>
+                <button
+                    className="buttonConfirm"
+                    onClick={loginSteam}
+                >
+                    Entrar com Steam
+                </button>
+            </div>
         </div>
     );
 }
