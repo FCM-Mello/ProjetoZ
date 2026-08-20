@@ -78,8 +78,7 @@ namespace ProjetoZ.Persistence.Migrations
                         .HasFilter("\"GrupoModId\" IS NOT NULL");
 
                     b.HasIndex("Nome")
-                        .IsUnique()
-                        .HasFilter("\"GrupoModId\" IS NULL");
+                        .IsUnique();
 
                     b.ToTable("Clas");
                 });
