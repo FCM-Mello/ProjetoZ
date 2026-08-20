@@ -262,30 +262,30 @@ Leitura sob demanda (tela de perfil no jogo) — diferente do `ranking/kd` acima
 
 ## Grupos
 
-Modelo **incremental**, não é mais sync em lote: o mod chama `grupos/adicionar` quando um jogador entra/cria um grupo e `grupos/expulsar` quando sai/é expulso — cada chamada mexe em 1 jogador só. Clã e grupo são a mesma entidade (`Cla`) — clã criado pelo site nunca é tocado por esses dois.
+Clã **só é criado pelo site** (`POST /api/clas`, JWT) — o mod nunca cria um grupo, só reflete entrada/saída de jogadores num clã que já existe. Modelo incremental: `grupos/adicionar` quando um jogador entra e `grupos/expulsar` quando sai/é expulso — cada chamada mexe em 1 jogador só. Clã e grupo são a mesma entidade (`Cla`).
+
+Todo clã tem um limite de **6 membros, contando o líder** — vale pra qualquer forma de entrar (site ou mod).
 
 ### `POST /api/game/grupos/adicionar`
 
-Adiciona 1 jogador a 1 grupo. Cria o clã na primeira chamada com esse `id` (grupo novo no jogo); chamadas seguintes só adicionam o próximo membro ao mesmo clã. `nome`/`liderSteamId` vêm sempre atualizados — manda o estado atual do grupo a cada chamada, não só na criação.
+Adiciona 1 jogador a 1 clã **que já existe**. `id` é o mesmo valor que `grupos/jogador` devolve pra esse clã (o Guid interno do site, já que todo clã nasce lá).
 
 ```json
 // request
 {
   "apiKey": "...",
-  "id": "1755500000-482913",
-  "nome": "Grupo de Fulano",
-  "liderSteamId": "76561198886359962",
+  "id": "3f1a9c2e-...",
   "steamId": "76561198886359962"
 }
 
 // response 200 (corpo vazio)
 ```
 
-- `steamId == liderSteamId` vira admin automaticamente (é assim que o criador do grupo vira líder+admin no site).
-- Se o jogador já estava em outro clã (site ou mod), o vínculo antigo é desfeito — a verdade do jogo sempre vence.
-- Chamar de novo pro mesmo `steamId` já membro desse clã é idempotente (não duplica, só confirma o admin se ele virou líder).
-- **Não existe mais dissolver por "sumir de um lote"** — um grupo só é apagado quando o último membro sai, via `grupos/expulsar` abaixo.
-- Nome de grupo **não precisa ser único** — só clãs criados pelo site (`grupos/adicionar` nunca cria esse tipo) têm nome único entre si.
+- `404` se `id` não corresponder a nenhum clã.
+- `400` se o clã já estiver com 6 membros.
+- Entra sempre como membro comum, nunca como líder/admin — quem é líder e quem é admin é definido no site (na criação, ou depois via painel do clã).
+- Se o jogador já estava em outro clã, o vínculo antigo é desfeito — a verdade do jogo sempre vence.
+- Chamar de novo pro mesmo `steamId` já membro desse clã é idempotente (não duplica).
 
 ### `POST /api/game/grupos/expulsar`
 
@@ -344,6 +344,6 @@ Leitura sob demanda (tela de grupo no jogo).
 | `POST /api/game/ranking/kd` | Sincronizar totais absolutos (kills, deaths, zumbis, koth, tempo jogado) |
 | `POST /api/game/ranking/koth` | Somar 1 conclusão de KOTH |
 | `POST /api/game/ranking/jogador` | Resumo de ranking de 1 jogador |
-| `POST /api/game/grupos/adicionar` | Adicionar 1 jogador a 1 grupo (cria o grupo se for o primeiro) |
+| `POST /api/game/grupos/adicionar` | Adicionar 1 jogador a 1 clã que já existe (máx. 6 membros) |
 | `POST /api/game/grupos/expulsar` | Remover 1 jogador do grupo, promovendo líder novo se preciso |
 | `POST /api/game/grupos/jogador` | Grupo atual de 1 jogador, se tiver |

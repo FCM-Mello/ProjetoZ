@@ -175,6 +175,10 @@ public class ClasController : ControllerBase
         if (jaSolicitou)
             return BadRequest("Você já solicitou entrada nesse clã.");
 
+        var totalMembros = await _context.ClaMembros.CountAsync(m => m.ClaId == id);
+        if (totalMembros >= ClaLimites.MaxMembros)
+            return BadRequest($"Esse clã já está no limite de {ClaLimites.MaxMembros} membros.");
+
         _context.ClaSolicitacoes.Add(new ClaSolicitacao
         {
             Id = Guid.NewGuid(),
@@ -227,6 +231,10 @@ public class ClasController : ControllerBase
 
             return BadRequest("Esse jogador já entrou em outro clã.");
         }
+
+        var totalMembros = await _context.ClaMembros.CountAsync(m => m.ClaId == id);
+        if (totalMembros >= ClaLimites.MaxMembros)
+            return BadRequest($"Esse clã já está no limite de {ClaLimites.MaxMembros} membros.");
 
         _context.ClaMembros.Add(new ClaMembro
         {
@@ -497,6 +505,10 @@ public class ClasController : ControllerBase
         if (jaConvidado)
             return BadRequest("Esse jogador já tem um convite pendente pra esse clã.");
 
+        var totalMembros = await _context.ClaMembros.CountAsync(m => m.ClaId == id);
+        if (totalMembros >= ClaLimites.MaxMembros)
+            return BadRequest($"Esse clã já está no limite de {ClaLimites.MaxMembros} membros.");
+
         var convite = new ClaConvite
         {
             Id = Guid.NewGuid(),
@@ -552,6 +564,10 @@ public class ClasController : ControllerBase
         var minhaSteamId = await SteamIdDoUsuario(meuId.Value);
         if (string.IsNullOrEmpty(minhaSteamId))
             return BadRequest("Sua conta precisa estar vinculada à Steam.");
+
+        var totalMembros = await _context.ClaMembros.CountAsync(m => m.ClaId == convite.ClaId);
+        if (totalMembros >= ClaLimites.MaxMembros)
+            return BadRequest($"Esse clã já está no limite de {ClaLimites.MaxMembros} membros.");
 
         // Sai do clã antigo, se tiver — a verdade do convite aceito vence.
         var membroAntigo = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == minhaSteamId);

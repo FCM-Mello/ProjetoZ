@@ -14,16 +14,16 @@ Resposta ao `API_Grupo_Ranking.md`. Tudo abaixo está implementado, testado (166
 
 Dois ajustes em relação ao documento original:
 1. Os dois endpoints de leitura de 1 jogador viraram `POST` com corpo JSON em vez de `GET` com a chave no header `X-Api-Key`. Mantém o cliente HTTP do mod num único padrão de chamada (sempre `POST` + corpo) em toda a API.
-2. O `POST /grupos/sync` (lote, substitui tudo a cada chamada) foi **trocado por dois endpoints incrementais**: `grupos/adicionar` (1 jogador entra/cria grupo) e `grupos/expulsar` (1 jogador sai/é expulso). O sync em lote batia num índice único de nome de clã que não tinha exceção pra grupo do mod — dois grupos com nome igual (ou ambos sem nome) derrubavam a chamada inteira com `500`. O modelo incremental evita esse cenário de origem e também é mais simples de disparar direto dos eventos do jogo (entrar/sair de grupo), em vez de acumular estado pra mandar em lote a cada 15min.
+2. O `POST /grupos/sync` (lote, substitui tudo a cada chamada) foi **trocado por dois endpoints incrementais**: `grupos/adicionar` (1 jogador entra num clã) e `grupos/expulsar` (1 jogador sai/é expulso). Além disso, **clã agora só é criado pelo site** — `grupos/adicionar` nunca cria um clã novo, só adiciona jogador a um que já existe (`404` se não existir), e todo clã tem um **limite de 6 membros contando o líder**.
 
 ## Única coisa que vale saber: Grupo agora é a mesma coisa que Clã do site
 
 O site ganhou um sistema de clã (jogador cria pelo site, com nome/descrição/estandarte, aprova entrada, promove admin etc.). Em vez de manter isso como uma tabela separada, unificamos: **Grupo (o que o mod sincroniza) e Clã (o que o site gerencia) são a mesma entidade no banco.**
 
-Isso afeta `grupos/adicionar` e `grupos/expulsar`: os dois mexem no clã via `id` de grupo (`GrupoModId`), e clãs sem esse `id` (criados no site) nunca são tocados por eles.
+Como todo clã nasce no site, `grupos/adicionar` identifica o clã pelo Guid interno que o site já usa (o mesmo `id` que `grupos/jogador` devolve) — não existe mais conceito de "id de grupo do mod".
 
-- `grupos/adicionar` faz **upsert por `id`**: grupo que já existe é atualizado (nome, líder); grupo novo é criado na primeira chamada. Membro que chama de novo pro mesmo jogador é idempotente.
-- `grupos/expulsar` remove o vínculo do jogador; se ele era o líder, promove automaticamente o próximo (admin mais antigo, senão membro comum mais antigo); se ninguém sobrar, o clã é apagado — dissolução agora só acontece por aqui, não existe mais "sumiu de um lote = removido".
+- `grupos/adicionar` só adiciona; nunca cria clã nem mexe em nome/líder (isso é 100% controlado pelo site). Membro que chama de novo pro mesmo jogador é idempotente. `400` se o clã já tiver 6 membros.
+- `grupos/expulsar` remove o vínculo do jogador; se ele era o líder, promove automaticamente o próximo (admin mais antigo, senão membro comum mais antigo); se ninguém sobrar, o clã é apagado.
 
 **Bônus pro mod, de graça**: como agora é a mesma tabela, o `grupos/jogador` também enxerga clãs criados pelo site. Se um jogador entrar num clã pelo site do ArkZ, a tela de grupo do jogo já mostra isso — sem precisar de nenhum código novo do lado do mod.
 
@@ -74,25 +74,24 @@ Isso afeta `grupos/adicionar` e `grupos/expulsar`: os dois mexem no clã via `id
 
 ### `POST /api/game/grupos/adicionar`
 
-Adiciona 1 jogador a 1 grupo — cria o clã na primeira chamada com esse `id`.
+Adiciona 1 jogador a 1 clã que **já existe** (criado pelo site).
 
 ```json
 // request
 {
   "apiKey": "...",
-  "id": "1755500000-482913",
-  "nome": "Grupo de Fulano",
-  "liderSteamId": "76561198886359962",
+  "id": "3f1a9c2e-...",
   "steamId": "76561198886359962"
 }
 
 // response 200 (corpo vazio)
 ```
 
-- `steamId == liderSteamId` vira admin automaticamente.
-- Jogador já vinculado a outro clã (site ou mod) tem o vínculo antigo desfeito.
+- `404` se `id` não corresponder a nenhum clã.
+- `400` se o clã já tiver 6 membros (limite fixo, contando o líder).
+- Entra sempre como membro comum — quem é líder/admin é decidido no site, não por esse endpoint.
+- Jogador já vinculado a outro clã tem o vínculo antigo desfeito.
 - Idempotente pro mesmo `steamId` já membro desse clã.
-- Nome de grupo não precisa ser único entre si (só nomes de clã criados no site precisam).
 
 ### `POST /api/game/grupos/expulsar`
 
@@ -116,10 +115,10 @@ Remove 1 jogador do grupo — chamar quando ele sai ou é expulso no jogo.
 // request
 { "apiKey": "...", "steamId": "76561198886359962" }
 
-// response 200 — tem grupo (de origem mod OU site)
+// response 200 — tem grupo
 {
   "temGrupo": true,
-  "id": "1755500000-482913",
+  "id": "3f1a9c2e-...",
   "nome": "Grupo de Fulano",
   "liderSteamId": "76561198886359962",
   "membros": ["76561198886359962", "76561198000000111"]
@@ -130,7 +129,7 @@ Remove 1 jogador do grupo — chamar quando ele sai ou é expulso no jogo.
 ```
 
 - "Sem grupo" é `200` com `temGrupo: false`, nunca `404`.
-- Se o grupo for um clã criado pelo site (sem `id` de mod), o `id` devolvido aqui é o identificador interno do site — ainda assim útil pra exibir/correlacionar, só não é um id que o mod reconhece de volta.
+- `id` é o Guid interno do site (todo clã nasce lá) — é esse mesmo valor que vai no `id` de `grupos/adicionar`.
 
 ## Autenticação
 

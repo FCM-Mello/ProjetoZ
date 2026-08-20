@@ -1,17 +1,16 @@
 namespace ProjetoZ.Application.DTOs
 {
-    // Adiciona 1 jogador a 1 grupo — cria o clã na primeira chamada desse
-    // Id (grupo novo no jogo). Nome/LiderSteamId vêm sempre atualizados
-    // (o mod manda o estado atual a cada chamada, não só na criação).
+    // Adiciona 1 jogador a 1 grupo/clã que JÁ EXISTE — clãs só são criados
+    // pelo site agora, então esse endpoint nunca cria um novo, só erra
+    // (404) se o Id não corresponder a nenhum. Id é o mesmo valor que
+    // GrupoJogadorDto.Id devolve (GrupoModId de um clã antigo de origem
+    // mod, ou o Guid interno do clã — que é sempre o caso pra clã novo,
+    // já que todos nascem no site).
     public class GrupoAdicionarRequest
     {
         public string ApiKey { get; set; } = string.Empty;
 
         public string Id { get; set; } = string.Empty;
-
-        public string Nome { get; set; } = string.Empty;
-
-        public string LiderSteamId { get; set; } = string.Empty;
 
         public string SteamId { get; set; } = string.Empty;
     }

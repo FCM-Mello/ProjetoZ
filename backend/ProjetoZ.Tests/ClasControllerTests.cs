@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjetoZ.Api.Controllers;
+using ProjetoZ.Api.Services;
 using ProjetoZ.Application.DTOs;
 using ProjetoZ.Domain.Entities;
 using ProjetoZ.Domian.Models;
@@ -144,6 +145,24 @@ public class ClasControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Solicitar_ClaNoLimiteDeMembros_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        for (var i = 1; i < ClaLimites.MaxMembros; i++)
+            AdicionarMembro(cla, CriarUsuario());
+
+        var candidato = CriarUsuario();
+        var controller = CriarController();
+        controller.ComoUsuario(candidato.Id);
+
+        var resultado = await controller.Solicitar(cla.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+    }
+
+    [Fact]
     public async Task AprovarSolicitacao_ComoLider_CriaMembroERemoveSolicitacao()
     {
         var lider = CriarUsuario();
@@ -184,6 +203,29 @@ public class ClasControllerTests : IDisposable
         var resultado = await controller.AprovarSolicitacao(cla.Id, solicitacao.Id);
 
         Assert.IsType<ForbidResult>(resultado);
+    }
+
+    [Fact]
+    public async Task AprovarSolicitacao_ClaNoLimiteDeMembros_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        for (var i = 1; i < ClaLimites.MaxMembros; i++)
+            AdicionarMembro(cla, CriarUsuario());
+
+        var candidato = CriarUsuario();
+        var solicitacao = new ClaSolicitacao { Id = Guid.NewGuid(), ClaId = cla.Id, UserId = candidato.Id };
+        _db.Context.ClaSolicitacoes.Add(solicitacao);
+        _db.Context.SaveChanges();
+
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.AprovarSolicitacao(cla.Id, solicitacao.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == candidato.Id));
     }
 
     [Fact]
@@ -609,6 +651,50 @@ public class ClasControllerTests : IDisposable
         var segunda = await controller.Convidar(cla.Id, convidado.Id);
 
         Assert.IsType<BadRequestObjectResult>(segunda);
+    }
+
+    [Fact]
+    public async Task Convidar_ClaNoLimiteDeMembros_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+
+        for (var i = 1; i < ClaLimites.MaxMembros; i++)
+            AdicionarMembro(cla, CriarUsuario());
+
+        var convidado = CriarUsuario();
+        var controller = CriarController();
+        controller.ComoUsuario(lider.Id);
+
+        var resultado = await controller.Convidar(cla.Id, convidado.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+    }
+
+    [Fact]
+    public async Task AceitarConvite_ClaNoLimiteDeMembros_RetornaBadRequest()
+    {
+        var lider = CriarUsuario();
+        var cla = CriarCla(lider);
+        var convidado = CriarUsuario();
+
+        var controllerLider = CriarController();
+        controllerLider.ComoUsuario(lider.Id);
+        await controllerLider.Convidar(cla.Id, convidado.Id);
+
+        var convite = await _db.Context.ClaConvites.SingleAsync();
+
+        // Clã enche depois do convite ser enviado, antes de ser aceito.
+        for (var i = 1; i < ClaLimites.MaxMembros; i++)
+            AdicionarMembro(cla, CriarUsuario());
+
+        var controllerConvidado = CriarController();
+        controllerConvidado.ComoUsuario(convidado.Id);
+
+        var resultado = await controllerConvidado.AceitarConvite(convite.Id);
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+        Assert.False(await _db.Context.ClaMembros.AnyAsync(m => m.UserId == convidado.Id));
     }
 
     [Fact]

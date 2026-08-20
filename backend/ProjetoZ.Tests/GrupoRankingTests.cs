@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ProjetoZ.Api.Controllers;
+using ProjetoZ.Api.Services;
 using ProjetoZ.Application.DTOs;
 using ProjetoZ.Domain.Entities;
 using ProjetoZ.Domian.Models;
@@ -155,93 +156,27 @@ public class GrupoRankingTests : IDisposable
     }
 
     [Fact]
-    public async Task AdicionarAoGrupo_GrupoNovo_CriaClaEAdicionaLiderComoAdmin()
+    public async Task AdicionarAoGrupo_GrupoInexistente_RetornaNotFound()
     {
         var controller = CriarController();
 
-        await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
+        var resultado = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
         {
             ApiKey = ApiKeyValida,
-            Id = "1755500000-482913",
-            Nome = "Grupo de Fulano",
-            LiderSteamId = SteamIdJogador,
+            Id = "grupo-que-nao-existe",
             SteamId = SteamIdJogador,
         });
 
-        var cla = await _db.Context.Clas.SingleAsync();
-
-        Assert.Equal("Grupo de Fulano", cla.Nome);
-        Assert.Equal(SteamIdJogador, cla.LiderSteamId);
-        Assert.Equal("1755500000-482913", cla.GrupoModId);
-
-        var membro = await _db.Context.ClaMembros.SingleAsync();
-        Assert.Equal(SteamIdJogador, membro.SteamId);
-        Assert.True(membro.IsAdmin);
+        Assert.IsType<NotFoundResult>(resultado);
     }
 
     [Fact]
-    public async Task AdicionarAoGrupo_SegundoMembro_EntraNoMesmoClaSemAdmin()
-    {
-        var controller = CriarController();
-
-        await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
-        {
-            ApiKey = ApiKeyValida,
-            Id = "grupo-1",
-            Nome = "Grupo",
-            LiderSteamId = SteamIdJogador,
-            SteamId = SteamIdJogador,
-        });
-
-        await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
-        {
-            ApiKey = ApiKeyValida,
-            Id = "grupo-1",
-            Nome = "Grupo",
-            LiderSteamId = SteamIdJogador,
-            SteamId = "76500000000000456",
-        });
-
-        var cla = await _db.Context.Clas.SingleAsync();
-        var membros = await _db.Context.ClaMembros.Where(m => m.ClaId == cla.Id).ToListAsync();
-
-        Assert.Equal(2, membros.Count);
-        Assert.False(membros.Single(m => m.SteamId == "76500000000000456").IsAdmin);
-    }
-
-    [Fact]
-    public async Task AdicionarAoGrupo_DoisGruposComNomeIgual_NaoDaErro()
-    {
-        var controller = CriarController();
-
-        var r1 = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
-        {
-            ApiKey = ApiKeyValida,
-            Id = "grupo-a",
-            Nome = "Grupo",
-            LiderSteamId = SteamIdJogador,
-            SteamId = SteamIdJogador,
-        });
-
-        var r2 = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
-        {
-            ApiKey = ApiKeyValida,
-            Id = "grupo-b",
-            Nome = "Grupo",
-            LiderSteamId = "76500000000000456",
-            SteamId = "76500000000000456",
-        });
-
-        Assert.IsType<OkResult>(r1);
-        Assert.IsType<OkResult>(r2);
-        Assert.Equal(2, await _db.Context.Clas.CountAsync());
-    }
-
-    [Fact]
-    public async Task AdicionarAoGrupo_NaoApagaNemColideComClaCriadoNoSite()
+    public async Task AdicionarAoGrupo_PorGrupoModId_AdicionaComoMembroComum()
     {
         var lider = CriarUsuario("76500000000000999");
-        _db.Context.Clas.Add(new Cla { Id = Guid.NewGuid(), Nome = "Clã do Site", LiderUserId = lider.Id, LiderSteamId = "76500000000000999" });
+        var cla = new Cla { Id = Guid.NewGuid(), GrupoModId = "grupo-1", Nome = "Grupo", LiderUserId = lider.Id, LiderSteamId = "76500000000000999" };
+        _db.Context.Clas.Add(cla);
+        _db.Context.ClaMembros.Add(new ClaMembro { Id = Guid.NewGuid(), ClaId = cla.Id, SteamId = "76500000000000999", IsAdmin = true, EntrouEm = DateTime.UtcNow });
         _db.Context.SaveChanges();
 
         var controller = CriarController();
@@ -249,48 +184,102 @@ public class GrupoRankingTests : IDisposable
         var resultado = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
         {
             ApiKey = ApiKeyValida,
-            Id = "grupo-do-mod",
-            Nome = "Clã do Site",
-            LiderSteamId = SteamIdJogador,
+            Id = "grupo-1",
             SteamId = SteamIdJogador,
         });
 
         Assert.IsType<OkResult>(resultado);
-        Assert.Equal(2, await _db.Context.Clas.CountAsync());
-        Assert.True(await _db.Context.Clas.AnyAsync(c => c.Nome == "Clã do Site" && c.GrupoModId == null));
+
+        var membros = await _db.Context.ClaMembros.Where(m => m.ClaId == cla.Id).ToListAsync();
+        Assert.Equal(2, membros.Count);
+        Assert.False(membros.Single(m => m.SteamId == SteamIdJogador).IsAdmin);
+    }
+
+    [Fact]
+    public async Task AdicionarAoGrupo_PorGuidInternoDeClaSemGrupoModId_Adiciona()
+    {
+        var cla = CriarClaDireto(SteamIdJogador, nome: "Clã do Site");
+        AdicionarMembroDireto(cla, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow);
+
+        var controller = CriarController();
+
+        var resultado = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
+        {
+            ApiKey = ApiKeyValida,
+            Id = cla.Id.ToString(),
+            SteamId = "76500000000000456",
+        });
+
+        Assert.IsType<OkResult>(resultado);
+        Assert.Equal(2, await _db.Context.ClaMembros.CountAsync(m => m.ClaId == cla.Id));
+    }
+
+    [Fact]
+    public async Task AdicionarAoGrupo_JaNoLimiteDeMembros_RetornaBadRequest()
+    {
+        var cla = CriarClaDireto(SteamIdJogador);
+        for (var i = 0; i < ClaLimites.MaxMembros; i++)
+            AdicionarMembroDireto(cla, $"7650000000000{1000 + i}", isAdmin: i == 0, entrouEm: DateTime.UtcNow);
+
+        var controller = CriarController();
+
+        var resultado = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
+        {
+            ApiKey = ApiKeyValida,
+            Id = cla.Id.ToString(),
+            SteamId = "76500000000009999",
+        });
+
+        Assert.IsType<BadRequestObjectResult>(resultado);
+        Assert.Equal(ClaLimites.MaxMembros, await _db.Context.ClaMembros.CountAsync(m => m.ClaId == cla.Id));
+    }
+
+    [Fact]
+    public async Task AdicionarAoGrupo_JaEhMembroDoMesmoCla_Idempotente()
+    {
+        var cla = CriarClaDireto(SteamIdJogador);
+        AdicionarMembroDireto(cla, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow);
+
+        var controller = CriarController();
+
+        var resultado = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
+        {
+            ApiKey = ApiKeyValida,
+            Id = cla.Id.ToString(),
+            SteamId = SteamIdJogador,
+        });
+
+        Assert.IsType<OkResult>(resultado);
+        Assert.Single(await _db.Context.ClaMembros.Where(m => m.ClaId == cla.Id).ToListAsync());
     }
 
     [Fact]
     public async Task AdicionarAoGrupo_JogadorJaEmOutroGrupo_MoveVinculo()
     {
+        var claA = CriarClaDireto(SteamIdJogador, nome: "A");
+        AdicionarMembroDireto(claA, SteamIdJogador, isAdmin: true, entrouEm: DateTime.UtcNow);
+
+        var claB = CriarClaDireto("76500000000000456", nome: "B");
+        AdicionarMembroDireto(claB, "76500000000000456", isAdmin: true, entrouEm: DateTime.UtcNow);
+
         var controller = CriarController();
 
-        await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
+        // Jogador saiu do grupo A no jogo e entrou no B, sem chamar expulsar antes.
+        var resultado = await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
         {
             ApiKey = ApiKeyValida,
-            Id = "grupo-a",
-            Nome = "A",
-            LiderSteamId = SteamIdJogador,
+            Id = claB.Id.ToString(),
             SteamId = SteamIdJogador,
         });
 
-        // Jogador saiu do grupo A no jogo e entrou no B, sem chamar expulsar antes.
-        await controller.AdicionarAoGrupo(new GrupoAdicionarRequest
-        {
-            ApiKey = ApiKeyValida,
-            Id = "grupo-b",
-            Nome = "B",
-            LiderSteamId = "76500000000000456",
-            SteamId = SteamIdJogador,
-        });
+        Assert.IsType<OkResult>(resultado);
 
         var vinculo = await _db.Context.ClaMembros.SingleAsync(m => m.SteamId == SteamIdJogador);
-        var claDoVinculo = await _db.Context.Clas.SingleAsync(c => c.Id == vinculo.ClaId);
-        Assert.Equal("grupo-b", claDoVinculo.GrupoModId);
+        Assert.Equal(claB.Id, vinculo.ClaId);
 
         // Grupo A continua existindo (só ficou sem esse membro) — dissolver
         // por esvaziar é responsabilidade do /grupos/expulsar, não daqui.
-        Assert.True(await _db.Context.Clas.AnyAsync(c => c.GrupoModId == "grupo-a"));
+        Assert.True(await _db.Context.Clas.AnyAsync(c => c.Id == claA.Id));
     }
 
     [Fact]

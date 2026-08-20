@@ -518,50 +518,41 @@ public class GameController : ControllerBase
         return Ok(dto);
     }
 
-    // Adiciona 1 jogador a 1 grupo — clã e grupo são a mesma entidade
-    // (Cla). Cria o clã na primeira chamada com esse Id; chamadas
-    // seguintes só entram aqui de novo, sem lote nem estado prévio (por
-    // isso não existe mais "dissolver o que sumiu" — isso agora só
-    // acontece via POST /grupos/expulsar, quando o último membro sai).
-    // A verdade do jogo sempre vence: se o jogador já estava em outro clã
-    // (site ou mod), o vínculo antigo é desfeito.
+    // Adiciona 1 jogador a 1 clã JÁ EXISTENTE — clã só é criado pelo site
+    // agora (ClasController.Criar), então esse endpoint nunca cria um
+    // novo, só erra 404 se o Id não corresponder a nenhum clã. Id é o
+    // mesmo valor que POST /grupos/jogador devolve (GrupoModId de um clã
+    // antigo de origem mod, ou o Guid interno pra qualquer clã novo).
+    // Limite de ClaLimites.MaxMembros contando o líder, igual ao resto do
+    // site. A verdade do jogo sempre vence: se o jogador já estava em
+    // outro clã, o vínculo antigo é desfeito.
     [HttpPost("grupos/adicionar")]
     public async Task<IActionResult> AdicionarAoGrupo(GrupoAdicionarRequest request)
     {
         if (!ValidarApiKey(request.ApiKey))
             return Unauthorized();
 
-        if (string.IsNullOrWhiteSpace(request.Id) || string.IsNullOrWhiteSpace(request.SteamId) || string.IsNullOrWhiteSpace(request.LiderSteamId))
-            return BadRequest("Id, steamId e liderSteamId são obrigatórios.");
+        if (string.IsNullOrWhiteSpace(request.Id) || string.IsNullOrWhiteSpace(request.SteamId))
+            return BadRequest("Id e steamId são obrigatórios.");
 
-        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.GrupoModId == request.Id);
+        var cla = Guid.TryParse(request.Id, out var idComoGuid)
+            ? await _context.Clas.FirstOrDefaultAsync(c => c.GrupoModId == request.Id || c.Id == idComoGuid)
+            : await _context.Clas.FirstOrDefaultAsync(c => c.GrupoModId == request.Id);
 
         if (cla == null)
-        {
-            cla = new Cla { Id = Guid.NewGuid(), GrupoModId = request.Id, CriadoEm = DateTime.UtcNow };
-            _context.Clas.Add(cla);
-        }
-
-        var liderUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.LiderSteamId);
-
-        cla.Nome = request.Nome;
-        cla.LiderSteamId = request.LiderSteamId;
-        cla.LiderUserId = liderUser?.Id;
+            return NotFound();
 
         var membroExistente = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == request.SteamId);
 
-        // Já é membro desse mesmo clã — só garante o admin se virou líder,
-        // idempotente (o mod pode chamar de novo sem problema).
+        // Já é membro desse mesmo clã — idempotente, o mod pode chamar de novo sem problema.
         if (membroExistente != null && membroExistente.ClaId == cla.Id)
-        {
-            if (request.SteamId == request.LiderSteamId)
-                membroExistente.IsAdmin = true;
-
-            await _context.SaveChangesAsync();
             return Ok();
-        }
 
+        var totalMembros = await _context.ClaMembros.CountAsync(m => m.ClaId == cla.Id);
+        if (totalMembros >= ClaLimites.MaxMembros)
+            return BadRequest($"Esse clã já está no limite de {ClaLimites.MaxMembros} membros.");
+
+        // Jogador estava em outro clã — a verdade do jogo vence, desfaz o vínculo antigo.
         if (membroExistente != null)
             _context.ClaMembros.Remove(membroExistente);
 
@@ -574,7 +565,7 @@ public class GameController : ControllerBase
             ClaId = cla.Id,
             UserId = user?.Id,
             SteamId = request.SteamId,
-            IsAdmin = request.SteamId == request.LiderSteamId,
+            IsAdmin = false,
             EntrouEm = DateTime.UtcNow,
         });
 

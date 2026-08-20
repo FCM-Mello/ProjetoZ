@@ -1,10 +1,11 @@
 namespace ProjetoZ.Domain.Entities;
 
-// Clã e "Grupo" (conceito que o mod usa) são a mesma coisa — essa entidade
-// serve tanto o que é criado pelo site quanto o que o mod gerencia via
-// POST /api/game/grupos/adicionar e /expulsar. GrupoModId é nulo pra clãs
-// criados no site (o mod não sabe que existem); quando preenchido, é a
-// chave que esses dois endpoints usam pra achar o clã certo.
+// Clã e "Grupo" (conceito que o mod usa) são a mesma coisa. Clã só é
+// criado pelo site (ClasController.Criar) — o mod só reflete
+// entrada/saída de membro num clã que já existe, via
+// POST /api/game/grupos/adicionar e /expulsar. GrupoModId existe só por
+// compatibilidade com clãs antigos de quando o mod ainda podia criar
+// grupo direto (sync em lote, removido); código novo nunca preenche.
 public class Cla
 {
     public Guid Id { get; set; }
@@ -19,8 +20,9 @@ public class Cla
     // pro lado do site — o mod não manda estandarte.
     public string? Estandarte { get; set; }
 
-    // Nulo se o líder (identificado por SteamId) ainda não tem conta no
-    // site — só pode acontecer pra clãs de origem mod.
+    // Sempre preenchido pra clã novo (criador já é usuário logado do
+    // site). Só fica nulo em clã antigo de origem mod, de antes do líder
+    // ter feito login com essa SteamId.
     public Guid? LiderUserId { get; set; }
 
     public string LiderSteamId { get; set; } = string.Empty;
