@@ -8,26 +8,26 @@ Resposta ao `API_Grupo_Ranking.md`. Tudo abaixo está implementado, testado (166
 |---|---|
 | `POST /api/game/ranking/kd` com `zumbiKills`, `kothCompletados`, `segundosJogados` | ✅ Implementado exatamente como pedido |
 | `POST /api/game/ranking/koth` | Sem mudança (já existia) |
-| `POST /api/game/grupos/sync` | ✅ Implementado — **comportamento interno mudou, contrato pro mod não** (ver nota abaixo) |
+| `POST /api/game/grupos/adicionar` + `POST /api/game/grupos/expulsar` | ✅ Implementado — **substitui o `POST /grupos/sync` original, ver nota abaixo** |
 | `POST /api/game/ranking/jogador` | ✅ Implementado — **ficou `POST` com `apiKey`/`steamId` no corpo, não `GET` com chave no header** (ver nota abaixo) |
 | `POST /api/game/grupos/jogador` | ✅ Implementado — mesma mudança acima |
 
-Único ajuste em relação ao documento original: os dois endpoints de leitura de 1 jogador viraram `POST` com corpo JSON em vez de `GET` com a chave no header `X-Api-Key`. Mantém o cliente HTTP do mod num único padrão de chamada (sempre `POST` + corpo) em toda a API, sem precisar montar header customizado só pra esses dois. Nada mais mudou — campos e resto do contrato exatamente como pedido.
+Dois ajustes em relação ao documento original:
+1. Os dois endpoints de leitura de 1 jogador viraram `POST` com corpo JSON em vez de `GET` com a chave no header `X-Api-Key`. Mantém o cliente HTTP do mod num único padrão de chamada (sempre `POST` + corpo) em toda a API.
+2. O `POST /grupos/sync` (lote, substitui tudo a cada chamada) foi **trocado por dois endpoints incrementais**: `grupos/adicionar` (1 jogador entra/cria grupo) e `grupos/expulsar` (1 jogador sai/é expulso). O sync em lote batia num índice único de nome de clã que não tinha exceção pra grupo do mod — dois grupos com nome igual (ou ambos sem nome) derrubavam a chamada inteira com `500`. O modelo incremental evita esse cenário de origem e também é mais simples de disparar direto dos eventos do jogo (entrar/sair de grupo), em vez de acumular estado pra mandar em lote a cada 15min.
 
 ## Única coisa que vale saber: Grupo agora é a mesma coisa que Clã do site
 
 O site ganhou um sistema de clã (jogador cria pelo site, com nome/descrição/estandarte, aprova entrada, promove admin etc.). Em vez de manter isso como uma tabela separada, unificamos: **Grupo (o que o mod sincroniza) e Clã (o que o site gerencia) são a mesma entidade no banco.**
 
-Isso muda como o `POST /grupos/sync` se comporta **por dentro**, mas não muda nada que o mod precise fazer diferente:
+Isso afeta `grupos/adicionar` e `grupos/expulsar`: os dois mexem no clã via `id` de grupo (`GrupoModId`), e clãs sem esse `id` (criados no site) nunca são tocados por eles.
 
-- Antes do que foi pedido no documento ("sync absoluto... substitui o que a API tinha"), a implementação seria "apaga tudo, recria do payload".
-- Como agora existem clãs criados pelo site que o mod não conhece, isso viraria um apagão dos clãs do site a cada sync de 15min.
-- Em vez disso, o sync faz **upsert por `id`** (o id que o mod já manda): grupo que já existe é atualizado (nome, líder, membros); grupo novo é criado; grupo que não vier mais num lote é considerado dissolvido e removido. Clãs sem `id` de grupo (criados no site) nunca são tocados por esse sync.
-- Como o mod já manda o **snapshot completo** de todos os grupos ativos a cada chamada (não incremental), o resultado observável é idêntico a um "substitui tudo" — só que sem apagar o que não é seu.
+- `grupos/adicionar` faz **upsert por `id`**: grupo que já existe é atualizado (nome, líder); grupo novo é criado na primeira chamada. Membro que chama de novo pro mesmo jogador é idempotente.
+- `grupos/expulsar` remove o vínculo do jogador; se ele era o líder, promove automaticamente o próximo (admin mais antigo, senão membro comum mais antigo); se ninguém sobrar, o clã é apagado — dissolução agora só acontece por aqui, não existe mais "sumiu de um lote = removido".
 
-**Bônus pro mod, de graça**: como agora é a mesma tabela, o `GET /grupos/jogador/{steamId}` também enxerga clãs criados pelo site. Se um jogador entrar num clã pelo site do ArkZ, a tela de grupo do jogo já mostra isso — sem precisar de nenhum código novo do lado do mod.
+**Bônus pro mod, de graça**: como agora é a mesma tabela, o `grupos/jogador` também enxerga clãs criados pelo site. Se um jogador entrar num clã pelo site do ArkZ, a tela de grupo do jogo já mostra isso — sem precisar de nenhum código novo do lado do mod.
 
-**Conflito de vínculo**: se por acaso um jogador estiver num clã do site e o próximo sync do mod mostrar ele em outro grupo (ex: saiu do clã do site e entrou num grupo no jogo, ou vice-versa em algum fluxo futuro), **a informação do mod sempre vence** — o vínculo antigo é desfeito automaticamente, sem erro, sem exigir nada do mod.
+**Conflito de vínculo**: se por acaso um jogador estiver num clã do site e o mod chamar `grupos/adicionar` mostrando ele em outro grupo (ex: saiu do clã do site e entrou num grupo no jogo, ou vice-versa em algum fluxo futuro), **a informação do mod sempre vence** — o vínculo antigo é desfeito automaticamente, sem erro, sem exigir nada do mod.
 
 ## Contrato final dos endpoints
 
@@ -72,27 +72,43 @@ Isso muda como o `POST /grupos/sync` se comporta **por dentro**, mas não muda n
 
 - `404` se o jogador nunca sincronizou nenhum dado de ranking.
 
-### `POST /api/game/grupos/sync`
+### `POST /api/game/grupos/adicionar`
+
+Adiciona 1 jogador a 1 grupo — cria o clã na primeira chamada com esse `id`.
 
 ```json
 // request
 {
   "apiKey": "...",
-  "grupos": [
-    {
-      "id": "1755500000-482913",
-      "nome": "Grupo de Fulano",
-      "liderSteamId": "76561198886359962",
-      "membros": ["76561198886359962", "76561198000000111"]
-    }
-  ]
+  "id": "1755500000-482913",
+  "nome": "Grupo de Fulano",
+  "liderSteamId": "76561198886359962",
+  "steamId": "76561198886359962"
 }
 
 // response 200 (corpo vazio)
 ```
 
-- Mandar `grupos: []` remove todos os grupos de origem mod (mantém os criados pelo site intactos).
-- Chamar de novo com o mesmo `id` atualiza nome/líder/membros; grupo que sumir do payload é removido.
+- `steamId == liderSteamId` vira admin automaticamente.
+- Jogador já vinculado a outro clã (site ou mod) tem o vínculo antigo desfeito.
+- Idempotente pro mesmo `steamId` já membro desse clã.
+- Nome de grupo não precisa ser único entre si (só nomes de clã criados no site precisam).
+
+### `POST /api/game/grupos/expulsar`
+
+Remove 1 jogador do grupo — chamar quando ele sai ou é expulso no jogo.
+
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
+
+// response 200
+{ "claApagado": false, "novoLiderSteamId": "76561198000000111" }
+```
+
+- `404` se `steamId` não está em nenhum grupo.
+- Se não era o líder: só sai, `novoLiderSteamId` vem `null`.
+- Se era o líder: promove o admin mais antigo, senão o membro comum mais antigo; sem mais ninguém, apaga o clã (`claApagado: true`).
 
 ### `POST /api/game/grupos/jogador`
 

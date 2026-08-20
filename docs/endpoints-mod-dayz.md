@@ -262,28 +262,50 @@ Leitura sob demanda (tela de perfil no jogo) — diferente do `ranking/kd` acima
 
 ## Grupos
 
-Sync **absoluto** de todos os grupos ativos no servidor — cada chamada de `POST /grupos/sync` substitui inteiramente o que a API tinha (grupo dissolvido/renomeado no jogo desaparece/atualiza aqui na próxima chamada, sem expirar por tempo como o Seguro).
+Modelo **incremental**, não é mais sync em lote: o mod chama `grupos/adicionar` quando um jogador entra/cria um grupo e `grupos/expulsar` quando sai/é expulso — cada chamada mexe em 1 jogador só. Clã e grupo são a mesma entidade (`Cla`) — clã criado pelo site nunca é tocado por esses dois.
 
-### `POST /api/game/grupos/sync`
+### `POST /api/game/grupos/adicionar`
+
+Adiciona 1 jogador a 1 grupo. Cria o clã na primeira chamada com esse `id` (grupo novo no jogo); chamadas seguintes só adicionam o próximo membro ao mesmo clã. `nome`/`liderSteamId` vêm sempre atualizados — manda o estado atual do grupo a cada chamada, não só na criação.
 
 ```json
 // request
 {
   "apiKey": "...",
-  "grupos": [
-    {
-      "id": "1755500000-482913",
-      "nome": "Grupo de Fulano",
-      "liderSteamId": "76561198886359962",
-      "membros": ["76561198886359962", "76561198000000111"]
-    }
-  ]
+  "id": "1755500000-482913",
+  "nome": "Grupo de Fulano",
+  "liderSteamId": "76561198886359962",
+  "steamId": "76561198886359962"
 }
 
 // response 200 (corpo vazio)
 ```
 
-- Chamar com `grupos: []` apaga todos os grupos (nenhum grupo ativo no momento).
+- `steamId == liderSteamId` vira admin automaticamente (é assim que o criador do grupo vira líder+admin no site).
+- Se o jogador já estava em outro clã (site ou mod), o vínculo antigo é desfeito — a verdade do jogo sempre vence.
+- Chamar de novo pro mesmo `steamId` já membro desse clã é idempotente (não duplica, só confirma o admin se ele virou líder).
+- **Não existe mais dissolver por "sumir de um lote"** — um grupo só é apagado quando o último membro sai, via `grupos/expulsar` abaixo.
+- Nome de grupo **não precisa ser único** — só clãs criados pelo site (`grupos/adicionar` nunca cria esse tipo) têm nome único entre si.
+
+### `POST /api/game/grupos/expulsar`
+
+Chamado quando o mod detecta que o jogador saiu ou foi expulso do grupo no jogo — remove o vínculo e, se era o líder, promove o próximo automaticamente. Vale tanto pra clã de origem mod quanto de origem site.
+
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
+
+// response 200
+{ "claApagado": false, "novoLiderSteamId": "76561198000000111" }
+```
+
+- `404` se `steamId` não está em nenhum grupo/clã no momento.
+- Se o jogador removido **não** era o líder: só sai do grupo, `novoLiderSteamId` vem `null`.
+- Se **era** o líder, promove nessa ordem:
+  1. O admin com mais tempo de grupo (menor `EntrouEm`).
+  2. Se não tiver admin, o membro comum com mais tempo de grupo.
+  3. Se não sobrar ninguém, o clã inteiro é apagado (`claApagado: true`) — junto com solicitações e convites pendentes.
+- O promovido sempre vira admin (`isAdmin = true`), além de líder.
 
 ### `POST /api/game/grupos/jogador`
 
@@ -308,26 +330,6 @@ Leitura sob demanda (tela de grupo no jogo).
 
 - "Sem grupo" é um estado válido — sempre `200`, nunca `404`.
 
-### `POST /api/game/grupos/expulsar`
-
-Chamado quando o mod detecta que o jogador saiu ou foi expulso do grupo no jogo — remove o vínculo e, se era o líder, promove o próximo automaticamente. Vale tanto pra clã de origem mod quanto de origem site.
-
-```json
-// request
-{ "apiKey": "...", "steamId": "76561198886359962" }
-
-// response 200
-{ "claApagado": false, "novoLiderSteamId": "76561198000000111" }
-```
-
-- `404` se `steamId` não está em nenhum grupo/clã no momento.
-- Se o jogador removido **não** era o líder: só sai do grupo, `novoLiderSteamId` vem `null`.
-- Se **era** o líder, promove nessa ordem:
-  1. O admin com mais tempo de grupo (menor `EntrouEm`).
-  2. Se não tiver admin, o membro comum com mais tempo de grupo.
-  3. Se não sobrar ninguém, o clã inteiro é apagado (`claApagado: true`) — junto com solicitações e convites pendentes.
-- O promovido sempre vira admin (`isAdmin = true`), além de líder.
-
 ## Resumo dos endpoints
 
 | Endpoint | Uso |
@@ -342,6 +344,6 @@ Chamado quando o mod detecta que o jogador saiu ou foi expulso do grupo no jogo 
 | `POST /api/game/ranking/kd` | Sincronizar totais absolutos (kills, deaths, zumbis, koth, tempo jogado) |
 | `POST /api/game/ranking/koth` | Somar 1 conclusão de KOTH |
 | `POST /api/game/ranking/jogador` | Resumo de ranking de 1 jogador |
-| `POST /api/game/grupos/sync` | Sync absoluto de todos os grupos ativos |
-| `POST /api/game/grupos/jogador` | Grupo atual de 1 jogador, se tiver |
+| `POST /api/game/grupos/adicionar` | Adicionar 1 jogador a 1 grupo (cria o grupo se for o primeiro) |
 | `POST /api/game/grupos/expulsar` | Remover 1 jogador do grupo, promovendo líder novo se preciso |
+| `POST /api/game/grupos/jogador` | Grupo atual de 1 jogador, se tiver |

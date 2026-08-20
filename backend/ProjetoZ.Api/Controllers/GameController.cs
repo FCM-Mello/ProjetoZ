@@ -518,102 +518,67 @@ public class GameController : ControllerBase
         return Ok(dto);
     }
 
-    // Sync absoluto DOS GRUPOS DO MOD (upsert por GrupoModId) — clã e grupo
-    // são a mesma entidade (Cla), mas essa sincronização só toca clãs de
-    // origem mod (GrupoModId preenchido); clãs criados no site (GrupoModId
-    // nulo) nunca são apagados/alterados por aqui. Grupo que não vier mais
-    // num lote foi dissolvido no jogo e é removido. A verdade do jogo
-    // sempre vence: se um jogador aparece num grupo diferente do que a API
-    // tinha, o vínculo antigo (de qualquer clã, site ou mod) é desfeito.
-    [HttpPost("grupos/sync")]
-    public async Task<IActionResult> SincronizarGrupos(GrupoSyncRequest request)
+    // Adiciona 1 jogador a 1 grupo — clã e grupo são a mesma entidade
+    // (Cla). Cria o clã na primeira chamada com esse Id; chamadas
+    // seguintes só entram aqui de novo, sem lote nem estado prévio (por
+    // isso não existe mais "dissolver o que sumiu" — isso agora só
+    // acontece via POST /grupos/expulsar, quando o último membro sai).
+    // A verdade do jogo sempre vence: se o jogador já estava em outro clã
+    // (site ou mod), o vínculo antigo é desfeito.
+    [HttpPost("grupos/adicionar")]
+    public async Task<IActionResult> AdicionarAoGrupo(GrupoAdicionarRequest request)
     {
         if (!ValidarApiKey(request.ApiKey))
             return Unauthorized();
 
-        var idsRecebidos = request.Grupos
-            .Where(g => !string.IsNullOrWhiteSpace(g.Id))
-            .Select(g => g.Id)
-            .ToList();
+        if (string.IsNullOrWhiteSpace(request.Id) || string.IsNullOrWhiteSpace(request.SteamId) || string.IsNullOrWhiteSpace(request.LiderSteamId))
+            return BadRequest("Id, steamId e liderSteamId são obrigatórios.");
 
-        var clasDissolvidos = await _context.Clas
-            .Where(c => c.GrupoModId != null && !idsRecebidos.Contains(c.GrupoModId))
-            .ToListAsync();
+        var cla = await _context.Clas.FirstOrDefaultAsync(c => c.GrupoModId == request.Id);
 
-        foreach (var claDissolvido in clasDissolvidos)
+        if (cla == null)
         {
-            await _context.ClaMembros.Where(m => m.ClaId == claDissolvido.Id).ExecuteDeleteAsync();
-            await _context.ClaSolicitacoes.Where(s => s.ClaId == claDissolvido.Id).ExecuteDeleteAsync();
-            _context.Clas.Remove(claDissolvido);
+            cla = new Cla { Id = Guid.NewGuid(), GrupoModId = request.Id, CriadoEm = DateTime.UtcNow };
+            _context.Clas.Add(cla);
         }
 
-        if (clasDissolvidos.Count > 0)
-            await _context.SaveChangesAsync();
+        var liderUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.LiderSteamId);
 
-        var agora = DateTime.UtcNow;
+        cla.Nome = request.Nome;
+        cla.LiderSteamId = request.LiderSteamId;
+        cla.LiderUserId = liderUser?.Id;
 
-        foreach (var grupo in request.Grupos)
+        var membroExistente = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == request.SteamId);
+
+        // Já é membro desse mesmo clã — só garante o admin se virou líder,
+        // idempotente (o mod pode chamar de novo sem problema).
+        if (membroExistente != null && membroExistente.ClaId == cla.Id)
         {
-            if (string.IsNullOrWhiteSpace(grupo.Id))
-                continue;
-
-            var cla = await _context.Clas.FirstOrDefaultAsync(c => c.GrupoModId == grupo.Id);
-
-            if (cla == null)
-            {
-                cla = new Cla { Id = Guid.NewGuid(), GrupoModId = grupo.Id, CriadoEm = agora };
-                _context.Clas.Add(cla);
-            }
-
-            var liderUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == grupo.LiderSteamId);
-
-            cla.Nome = grupo.Nome;
-            cla.LiderSteamId = grupo.LiderSteamId;
-            cla.LiderUserId = liderUser?.Id;
-
-            var membrosAtuais = await _context.ClaMembros
-                .Where(m => m.ClaId == cla.Id)
-                .ToDictionaryAsync(m => m.SteamId);
-
-            var steamIdsNovos = grupo.Membros ?? new List<string>();
-
-            foreach (var steamId in steamIdsNovos)
-            {
-                if (membrosAtuais.ContainsKey(steamId))
-                    continue;
-
-                // O jogador pode já estar vinculado a outro clã (site ou
-                // mod) — a verdade do jogo vence, desfaz o vínculo antigo.
-                var vinculoAnterior = await _context.ClaMembros
-                    .FirstOrDefaultAsync(m => m.SteamId == steamId);
-                if (vinculoAnterior != null)
-                    _context.ClaMembros.Remove(vinculoAnterior);
-
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == steamId);
-
-                _context.ClaMembros.Add(new ClaMembro
-                {
-                    Id = Guid.NewGuid(),
-                    ClaId = cla.Id,
-                    UserId = user?.Id,
-                    SteamId = steamId,
-                    IsAdmin = steamId == grupo.LiderSteamId,
-                    EntrouEm = agora,
-                });
-            }
-
-            foreach (var (steamId, membro) in membrosAtuais)
-            {
-                if (!steamIdsNovos.Contains(steamId))
-                    _context.ClaMembros.Remove(membro);
-                else if (steamId == grupo.LiderSteamId && !membro.IsAdmin)
-                    membro.IsAdmin = true;
-            }
+            if (request.SteamId == request.LiderSteamId)
+                membroExistente.IsAdmin = true;
 
             await _context.SaveChangesAsync();
+            return Ok();
         }
+
+        if (membroExistente != null)
+            _context.ClaMembros.Remove(membroExistente);
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.SteamId == request.SteamId);
+
+        _context.ClaMembros.Add(new ClaMembro
+        {
+            Id = Guid.NewGuid(),
+            ClaId = cla.Id,
+            UserId = user?.Id,
+            SteamId = request.SteamId,
+            IsAdmin = request.SteamId == request.LiderSteamId,
+            EntrouEm = DateTime.UtcNow,
+        });
+
+        await _context.SaveChangesAsync();
 
         return Ok();
     }

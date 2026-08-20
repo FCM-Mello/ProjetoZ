@@ -1,10 +1,10 @@
 namespace ProjetoZ.Domain.Entities;
 
 // Clã e "Grupo" (conceito que o mod usa) são a mesma coisa — essa entidade
-// serve tanto o que é criado pelo site quanto o que o mod sincroniza a cada
-// 15min. GrupoModId é nulo pra clãs criados no site (o mod não sabe que
-// existem); quando preenchido, é a chave que o POST /api/game/grupos/sync
-// usa pra fazer upsert sem apagar clãs de origem site.
+// serve tanto o que é criado pelo site quanto o que o mod gerencia via
+// POST /api/game/grupos/adicionar e /expulsar. GrupoModId é nulo pra clãs
+// criados no site (o mod não sabe que existem); quando preenchido, é a
+// chave que esses dois endpoints usam pra achar o clã certo.
 public class Cla
 {
     public Guid Id { get; set; }

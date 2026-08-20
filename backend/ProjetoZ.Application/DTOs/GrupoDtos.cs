@@ -1,23 +1,19 @@
 namespace ProjetoZ.Application.DTOs
 {
-    // Sync absoluto de todos os grupos ativos no momento da chamada — os que
-    // não vierem na lista deixam de existir do lado da API.
-    public class GrupoSyncRequest
+    // Adiciona 1 jogador a 1 grupo — cria o clã na primeira chamada desse
+    // Id (grupo novo no jogo). Nome/LiderSteamId vêm sempre atualizados
+    // (o mod manda o estado atual a cada chamada, não só na criação).
+    public class GrupoAdicionarRequest
     {
         public string ApiKey { get; set; } = string.Empty;
 
-        public List<GrupoSyncItemDto> Grupos { get; set; } = new();
-    }
-
-    public class GrupoSyncItemDto
-    {
         public string Id { get; set; } = string.Empty;
 
         public string Nome { get; set; } = string.Empty;
 
         public string LiderSteamId { get; set; } = string.Empty;
 
-        public List<string> Membros { get; set; } = new();
+        public string SteamId { get; set; } = string.Empty;
     }
 
     // Devolvido por POST /api/game/grupos/jogador (mod). "Sem grupo" é um
