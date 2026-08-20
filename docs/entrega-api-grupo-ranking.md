@@ -9,10 +9,10 @@ Resposta ao `API_Grupo_Ranking.md`. Tudo abaixo está implementado, testado (166
 | `POST /api/game/ranking/kd` com `zumbiKills`, `kothCompletados`, `segundosJogados` | ✅ Implementado exatamente como pedido |
 | `POST /api/game/ranking/koth` | Sem mudança (já existia) |
 | `POST /api/game/grupos/sync` | ✅ Implementado — **comportamento interno mudou, contrato pro mod não** (ver nota abaixo) |
-| `GET /api/game/ranking/jogador/{steamId}` | ✅ Implementado, chave no header `X-Api-Key` como combinado |
-| `GET /api/game/grupos/jogador/{steamId}` | ✅ Implementado, chave no header `X-Api-Key` como combinado |
+| `POST /api/game/ranking/jogador` | ✅ Implementado — **ficou `POST` com `apiKey`/`steamId` no corpo, não `GET` com chave no header** (ver nota abaixo) |
+| `POST /api/game/grupos/jogador` | ✅ Implementado — mesma mudança acima |
 
-Nenhum campo, rota ou formato de request/response ficou diferente do que foi pedido no documento original. O mod pode consumir exatamente como especificado lá.
+Único ajuste em relação ao documento original: os dois endpoints de leitura de 1 jogador viraram `POST` com corpo JSON em vez de `GET` com a chave no header `X-Api-Key`. Mantém o cliente HTTP do mod num único padrão de chamada (sempre `POST` + corpo) em toda a API, sem precisar montar header customizado só pra esses dois. Nada mais mudou — campos e resto do contrato exatamente como pedido.
 
 ## Única coisa que vale saber: Grupo agora é a mesma coisa que Clã do site
 
@@ -52,11 +52,11 @@ Isso muda como o `POST /grupos/sync` se comporta **por dentro**, mas não muda n
 - `400` se algum valor vier negativo.
 - `404` se `steamId` desconhecido da API.
 
-### `GET /api/game/ranking/jogador/{steamId}`
+### `POST /api/game/ranking/jogador`
 
-```
-GET /api/game/ranking/jogador/76561198886359962
-X-Api-Key: ...
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
 
 // response 200
 {
@@ -94,11 +94,11 @@ X-Api-Key: ...
 - Mandar `grupos: []` remove todos os grupos de origem mod (mantém os criados pelo site intactos).
 - Chamar de novo com o mesmo `id` atualiza nome/líder/membros; grupo que sumir do payload é removido.
 
-### `GET /api/game/grupos/jogador/{steamId}`
+### `POST /api/game/grupos/jogador`
 
-```
-GET /api/game/grupos/jogador/76561198886359962
-X-Api-Key: ...
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
 
 // response 200 — tem grupo (de origem mod OU site)
 {
@@ -116,8 +116,6 @@ X-Api-Key: ...
 - "Sem grupo" é `200` com `temGrupo: false`, nunca `404`.
 - Se o grupo for um clã criado pelo site (sem `id` de mod), o `id` devolvido aqui é o identificador interno do site — ainda assim útil pra exibir/correlacionar, só não é um id que o mod reconhece de volta.
 
-## Autenticação (sem mudança)
+## Autenticação
 
-- Endpoints `POST`: `apiKey` no corpo do JSON.
-- Endpoints `GET` (os dois novos de leitura sob demanda): `apiKey` no header `X-Api-Key`.
-- Chave errada ou ausente: `401`.
+Todo endpoint é `POST` com `apiKey` no corpo do JSON — inclusive os dois novos de leitura sob demanda. Chave errada ou ausente: `401`.

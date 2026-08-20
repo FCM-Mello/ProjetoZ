@@ -7,8 +7,7 @@ Referência de tudo que o servidor de jogo (mod ArkZ) pode chamar na API do site
 Não usa JWT — o servidor de jogo não é um usuário logado no site. Todo endpoint recebe `apiKey` **no corpo** da requisição (não em header) e valida contra `GameServer:ApiKey` (env var `GAMESERVER_API_KEY`) com comparação resistente a timing attack.
 
 - Chave errada ou ausente → `401 Unauthorized`.
-- A maioria das chamadas é `POST` com corpo JSON, mesmo as que só leem dado (convenção do controller, não RESTful "puro" — é assim porque o cliente HTTP do mod manda tudo no corpo).
-- Exceção: os endpoints `GET` de leitura sob demanda (ranking e grupo de 1 jogador, mais abaixo) não têm corpo, então a `apiKey` vai no header `X-Api-Key` em vez do corpo.
+- Todo endpoint é `POST` com corpo JSON, mesmo os que só leem dado (convenção do controller, não RESTful "puro" — é assim de propósito, pra manter o cliente HTTP do mod num único padrão de chamada: sempre `POST` + `apiKey` no corpo, nunca em header).
 
 ## `POST /api/game/player`
 
@@ -235,13 +234,13 @@ Chamado **uma vez a cada conclusão do KOTH** pelo jogador — soma 1 ao contado
 - Cria a linha de ranking desse jogador na primeira conclusão.
 - `404` se `steamId` desconhecido.
 
-### `GET /api/game/ranking/jogador/{steamId}`
+### `POST /api/game/ranking/jogador`
 
-Leitura sob demanda (tela de perfil no jogo) — chave via header `X-Api-Key`, não no corpo.
+Leitura sob demanda (tela de perfil no jogo) — diferente do `ranking/kd` acima, que roda no ciclo automático de 15min.
 
-```
-GET /api/game/ranking/jogador/76561198886359962
-X-Api-Key: ...
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
 
 // response 200
 {
@@ -286,13 +285,13 @@ Sync **absoluto** de todos os grupos ativos no servidor — cada chamada de `POS
 
 - Chamar com `grupos: []` apaga todos os grupos (nenhum grupo ativo no momento).
 
-### `GET /api/game/grupos/jogador/{steamId}`
+### `POST /api/game/grupos/jogador`
 
-Leitura sob demanda (tela de grupo no jogo) — chave via header `X-Api-Key`.
+Leitura sob demanda (tela de grupo no jogo).
 
-```
-GET /api/game/grupos/jogador/76561198886359962
-X-Api-Key: ...
+```json
+// request
+{ "apiKey": "...", "steamId": "76561198886359962" }
 
 // response 200 — tem grupo
 {
@@ -322,6 +321,6 @@ X-Api-Key: ...
 | `POST /api/game/veiculos/posicao` | Sync em lote de posição de veículos segurados |
 | `POST /api/game/ranking/kd` | Sincronizar totais absolutos (kills, deaths, zumbis, koth, tempo jogado) |
 | `POST /api/game/ranking/koth` | Somar 1 conclusão de KOTH |
-| `GET /api/game/ranking/jogador/{steamId}` | Resumo de ranking de 1 jogador (chave no header) |
+| `POST /api/game/ranking/jogador` | Resumo de ranking de 1 jogador |
 | `POST /api/game/grupos/sync` | Sync absoluto de todos os grupos ativos |
-| `GET /api/game/grupos/jogador/{steamId}` | Grupo atual de 1 jogador, se tiver (chave no header) |
+| `POST /api/game/grupos/jogador` | Grupo atual de 1 jogador, se tiver |

@@ -53,9 +53,8 @@ namespace ProjetoZ.Application.DTOs
         public int SegundosJogados { get; set; }
     }
 
-    // Devolvido por GET /api/game/ranking/jogador/{steamId} (mod, chave por
-    // header) — resumo enxuto de 1 jogador, diferente de RankingJogadorDto
-    // (lista completa pro site).
+    // Devolvido por POST /api/game/ranking/jogador (mod) — resumo enxuto de
+    // 1 jogador, diferente de RankingJogadorDto (lista completa pro site).
     public class JogadorRankingDto
     {
         public string SteamId { get; set; } = string.Empty;

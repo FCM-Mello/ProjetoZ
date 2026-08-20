@@ -487,21 +487,22 @@ public class GameController : ControllerBase
     }
 
     // Leitura sob demanda (tela de perfil no jogo) — diferente dos POSTs
-    // acima, que rodam em ciclo automático de 15min. Por isso a chave vem no
-    // header em vez do corpo (GET não carrega corpo).
-    [HttpGet("ranking/jogador/{steamId}")]
-    public async Task<IActionResult> GetRankingJogador(string steamId)
+    // acima, que rodam em ciclo automático de 15min. Ainda assim é POST com
+    // a chave e o steamId no corpo, igual a todo o resto da API do mod
+    // (mantém o cliente HTTP do mod num único padrão de chamada).
+    [HttpPost("ranking/jogador")]
+    public async Task<IActionResult> GetRankingJogador(PlayerLookupRequest request)
     {
-        if (!ValidarApiKey(Request.Headers["X-Api-Key"]))
+        if (!ValidarApiKey(request.ApiKey))
             return Unauthorized();
 
         var dto = await (
             from r in _context.PlayerRankings
             join u in _context.Users on r.UserId equals u.Id
-            where u.Profile != null && u.Profile.SteamId == steamId
+            where u.Profile != null && u.Profile.SteamId == request.SteamId
             select new JogadorRankingDto
             {
-                SteamId = steamId,
+                SteamId = request.SteamId,
                 Nome = u.Profile!.Name ?? "Jogador",
                 Kills = r.Kills,
                 Deaths = r.Deaths,
@@ -619,13 +620,13 @@ public class GameController : ControllerBase
 
     // Leitura sob demanda (tela de grupo no jogo). "Sem grupo" é um estado
     // válido — devolve 200 com TemGrupo=false, não 404.
-    [HttpGet("grupos/jogador/{steamId}")]
-    public async Task<IActionResult> GetGrupoJogador(string steamId)
+    [HttpPost("grupos/jogador")]
+    public async Task<IActionResult> GetGrupoJogador(PlayerLookupRequest request)
     {
-        if (!ValidarApiKey(Request.Headers["X-Api-Key"]))
+        if (!ValidarApiKey(request.ApiKey))
             return Unauthorized();
 
-        var membro = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == steamId);
+        var membro = await _context.ClaMembros.FirstOrDefaultAsync(m => m.SteamId == request.SteamId);
         if (membro == null)
             return Ok(new GrupoJogadorDto { TemGrupo = false });
 

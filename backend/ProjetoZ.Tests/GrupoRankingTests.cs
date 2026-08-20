@@ -18,7 +18,7 @@ public class GrupoRankingTests : IDisposable
 
     public void Dispose() => _db.Dispose();
 
-    private GameController CriarController(string? apiKeyNoHeader = null)
+    private GameController CriarController()
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -27,18 +27,13 @@ public class GrupoRankingTests : IDisposable
             })
             .Build();
 
-        var controller = new GameController(_db.Context, config)
+        return new GameController(_db.Context, config)
         {
             ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext(),
             },
         };
-
-        if (apiKeyNoHeader != null)
-            controller.ControllerContext.HttpContext.Request.Headers["X-Api-Key"] = apiKeyNoHeader;
-
-        return controller;
     }
 
     private User CriarUsuario(string steamId, string nome = "Jogador")
@@ -110,11 +105,11 @@ public class GrupoRankingTests : IDisposable
     }
 
     [Fact]
-    public async Task GetRankingJogador_SemChaveNoHeader_RetornaUnauthorized()
+    public async Task GetRankingJogador_ApiKeyInvalida_RetornaUnauthorized()
     {
-        var controller = CriarController(apiKeyNoHeader: "chave-errada");
+        var controller = CriarController();
 
-        var resultado = await controller.GetRankingJogador(SteamIdJogador);
+        var resultado = await controller.GetRankingJogador(new PlayerLookupRequest { ApiKey = "chave-errada", SteamId = SteamIdJogador });
 
         Assert.IsType<UnauthorizedResult>(resultado);
     }
@@ -135,9 +130,9 @@ public class GrupoRankingTests : IDisposable
         });
         _db.Context.SaveChanges();
 
-        var controller = CriarController(apiKeyNoHeader: ApiKeyValida);
+        var controller = CriarController();
 
-        var resultado = await controller.GetRankingJogador(SteamIdJogador);
+        var resultado = await controller.GetRankingJogador(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
 
         var ok = Assert.IsType<OkObjectResult>(resultado);
         var dto = Assert.IsType<JogadorRankingDto>(ok.Value);
@@ -152,9 +147,9 @@ public class GrupoRankingTests : IDisposable
     [Fact]
     public async Task GetRankingJogador_SteamIdDesconhecido_RetornaNotFound()
     {
-        var controller = CriarController(apiKeyNoHeader: ApiKeyValida);
+        var controller = CriarController();
 
-        var resultado = await controller.GetRankingJogador("76500000000000999");
+        var resultado = await controller.GetRankingJogador(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = "76500000000000999" });
 
         Assert.IsType<NotFoundResult>(resultado);
     }
@@ -270,9 +265,9 @@ public class GrupoRankingTests : IDisposable
             Grupos = [new GrupoSyncItemDto { Id = "1755500000-482913", Nome = "Grupo de Fulano", LiderSteamId = SteamIdJogador, Membros = [SteamIdJogador, "76500000000000456"] }],
         });
 
-        var controller = CriarController(apiKeyNoHeader: ApiKeyValida);
+        var controller = CriarController();
 
-        var resultado = await controller.GetGrupoJogador(SteamIdJogador);
+        var resultado = await controller.GetGrupoJogador(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
 
         var ok = Assert.IsType<OkObjectResult>(resultado);
         var dto = Assert.IsType<GrupoJogadorDto>(ok.Value);
@@ -284,9 +279,9 @@ public class GrupoRankingTests : IDisposable
     [Fact]
     public async Task GetGrupoJogador_SemGrupo_RetornaTemGrupoFalso()
     {
-        var controller = CriarController(apiKeyNoHeader: ApiKeyValida);
+        var controller = CriarController();
 
-        var resultado = await controller.GetGrupoJogador(SteamIdJogador);
+        var resultado = await controller.GetGrupoJogador(new PlayerLookupRequest { ApiKey = ApiKeyValida, SteamId = SteamIdJogador });
 
         var ok = Assert.IsType<OkObjectResult>(resultado);
         var dto = Assert.IsType<GrupoJogadorDto>(ok.Value);

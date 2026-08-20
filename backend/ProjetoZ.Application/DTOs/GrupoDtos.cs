@@ -20,9 +20,8 @@ namespace ProjetoZ.Application.DTOs
         public List<string> Membros { get; set; } = new();
     }
 
-    // Devolvido por GET /api/game/grupos/jogador/{steamId} (mod, chave por
-    // header). "Sem grupo" é um estado válido — vem 200 com TemGrupo=false,
-    // não 404.
+    // Devolvido por POST /api/game/grupos/jogador (mod). "Sem grupo" é um
+    // estado válido — vem 200 com TemGrupo=false, não 404.
     public class GrupoJogadorDto
     {
         public bool TemGrupo { get; set; }
